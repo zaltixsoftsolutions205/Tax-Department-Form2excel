@@ -10,6 +10,7 @@ export default function LoginPage() {
   const [showPass,   setShowPass]   = useState(false);
   const [loading,    setLoading]    = useState(false);
   const [error,      setError]      = useState('');
+  const [msg,        setMsg]        = useState('');
   const navigate = useNavigate();
 
   const isRegister = mode === 'register';
@@ -19,16 +20,20 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      const endpoint = isRegister ? '/api/auth/register' : '/api/auth/login';
-      const payload  = isRegister
-        ? { name, identifier, password }
-        : { identifier, password };
-
-      const { data } = await api.post(endpoint, payload);
-
-      localStorage.setItem('adminToken', data.token);
-      localStorage.setItem('adminUser',  JSON.stringify(data.admin));
-      navigate('/admin', { replace: true });
+      if (isRegister) {
+        // Register → show success then switch to login
+        await api.post('/api/auth/register', { name, identifier, password });
+        setName(''); setPassword(''); setIdentifier('');
+        setMode('login');
+        setError('');
+        setMsg('Registered successfully! Please log in.');
+      } else {
+        // Login → save token and go to admin
+        const { data } = await api.post('/api/auth/login', { identifier, password });
+        localStorage.setItem('adminToken', data.token);
+        localStorage.setItem('adminUser',  JSON.stringify(data.admin));
+        navigate('/admin', { replace: true });
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Something went wrong. Try again.');
     } finally {
@@ -62,7 +67,7 @@ export default function LoginPage() {
           {/* Tabs */}
           <div className="flex border-b border-gray-100">
             <button
-              onClick={() => { setMode('login'); setError(''); }}
+              onClick={() => { setMode('login'); setError(''); setMsg(''); }}
               className={`flex-1 py-3 text-sm font-semibold transition-colors ${
                 mode === 'login'
                   ? 'text-blue-700 border-b-2 border-blue-700 bg-blue-50/50'
@@ -71,7 +76,7 @@ export default function LoginPage() {
               Login
             </button>
             <button
-              onClick={() => { setMode('register'); setError(''); }}
+              onClick={() => { setMode('register'); setError(''); setMsg(''); }}
               className={`flex-1 py-3 text-sm font-semibold transition-colors ${
                 mode === 'register'
                   ? 'text-blue-700 border-b-2 border-blue-700 bg-blue-50/50'
@@ -129,6 +134,16 @@ export default function LoginPage() {
                 </button>
               </div>
             </div>
+
+            {/* Success message (after register) */}
+            {msg && (
+              <div className="flex items-start gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-2.5">
+                <svg className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                <p className="text-xs text-green-700">{msg}</p>
+              </div>
+            )}
 
             {/* Error */}
             {error && (
