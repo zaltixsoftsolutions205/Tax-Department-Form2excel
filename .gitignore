@@ -3,6 +3,7 @@ server/node_modules/
 client/node_modules/
 server/.env
 server/uploads/
+server/*.traineddata
 dist/
 client/dist/
 .DS_Store
