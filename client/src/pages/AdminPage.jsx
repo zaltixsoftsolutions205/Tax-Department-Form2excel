@@ -88,12 +88,9 @@ function StatCard({ label, value, color }) {
     gray:   'bg-gray-500',
   };
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-2 sm:p-4 flex flex-col items-center justify-center text-center gap-1">
-      <div className={`w-8 h-8 sm:w-11 sm:h-11 rounded-lg ${colors[color]} flex items-center justify-center`}>
-        <span className="text-white text-sm sm:text-xl font-bold">{value}</span>
-      </div>
-      <p className="text-gray-800 font-bold text-sm sm:text-xl leading-none">{value}</p>
-      <p className="text-gray-400 text-xs uppercase tracking-wide leading-none">{label}</p>
+    <div className={`${colors[color]} rounded-xl p-2 sm:p-3 flex flex-col items-center justify-center text-center gap-0.5`}>
+      <p className="text-white font-bold text-lg sm:text-2xl leading-none">{value}</p>
+      <p className="text-white/80 text-xs uppercase tracking-wide leading-none">{label}</p>
     </div>
   );
 }
