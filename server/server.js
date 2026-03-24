@@ -6,8 +6,10 @@ const mongoose  = require('mongoose');
 const path      = require('path');
 const fs        = require('fs');
 
-const formRoutes  = require('./routes/form');
-const adminRoutes = require('./routes/admin');
+const formRoutes        = require('./routes/form');
+const adminRoutes       = require('./routes/admin');
+const authRoutes        = require('./routes/auth');
+const authMiddleware    = require('./middleware/authMiddleware');
 
 const app = express();
 
@@ -46,7 +48,8 @@ app.use('/uploads', express.static(UPLOADS_DIR));
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.use('/api', formRoutes);
-app.use('/api/admin', adminRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/admin', authMiddleware, adminRoutes); // protected
 
 app.get('/api/health', (_req, res) =>
   res.json({ status: 'ok', timestamp: new Date().toISOString() })

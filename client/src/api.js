@@ -1,9 +1,29 @@
 import axios from 'axios';
 
-// In production (Vercel), VITE_API_URL points to your Render backend URL.
-// In development, it's empty so Vite's proxy handles /api/* → localhost:5001
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '',
 });
+
+// Attach JWT token from localStorage to every request
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('adminToken');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+// If 401 received, clear token and redirect to login
+api.interceptors.response.use(
+  (res) => res,
+  (err) => {
+    if (err.response?.status === 401) {
+      localStorage.removeItem('adminToken');
+      localStorage.removeItem('adminUser');
+      if (window.location.pathname.startsWith('/admin')) {
+        window.location.href = '/login';
+      }
+    }
+    return Promise.reject(err);
+  }
+);
 
 export default api;
