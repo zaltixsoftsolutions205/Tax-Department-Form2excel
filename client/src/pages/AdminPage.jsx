@@ -46,28 +46,35 @@ function ExpectedAmountSetting() {
   };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3">
-      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">⚙️ Payment Settings</p>
-      <div className="flex items-end gap-2 flex-wrap">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 md:p-4">
+      <h2 className="text-xs md:text-sm font-semibold text-gray-700 mb-2 uppercase tracking-wide">⚙️ Payment Settings</h2>
+      <div className="flex flex-wrap items-end gap-2 md:gap-3">
         <div>
           <label className="field-label">Expected Amount (₹)</label>
-          <div className="flex items-center gap-1">
-            <span className="text-gray-400 text-sm">₹</span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-gray-500 font-semibold text-sm">₹</span>
             <input type="number" min="1" value={input}
               onChange={e => { setInput(e.target.value); setMsg(null); }}
               onKeyDown={e => e.key === 'Enter' && save()}
-              className="field-input w-24 py-1.5 text-sm" placeholder="500" />
+              className="field-input w-24 md:w-32 text-sm py-1.5"
+              placeholder="500" />
           </div>
         </div>
         <button onClick={save} disabled={saving || input === String(current)}
-          className="btn-primary py-1.5 px-3 text-xs">
+          className="btn-primary py-1.5 px-4 text-sm">
           {saving ? 'Saving…' : 'Save'}
         </button>
         {current !== null && (
-          <span className="text-xs text-gray-400">Current: <strong className="text-blue-700">₹{current}</strong></span>
+          <span className="text-xs text-gray-500">
+            Current: <strong className="text-blue-700">₹{current}</strong>
+          </span>
         )}
       </div>
-      {msg && <p className={`mt-1 text-xs font-medium ${msg.ok ? 'text-green-700' : 'text-red-600'}`}>{msg.ok ? '✓ ' : '✗ '}{msg.text}</p>}
+      {msg && (
+        <p className={`mt-1.5 text-xs font-medium ${msg.ok ? 'text-green-700' : 'text-red-600'}`}>
+          {msg.ok ? '✓ ' : '✗ '}{msg.text}
+        </p>
+      )}
     </div>
   );
 }
@@ -76,9 +83,9 @@ function ExpectedAmountSetting() {
 function StatCard({ label, value, color }) {
   const bg = { blue:'bg-blue-600', green:'bg-green-600', yellow:'bg-yellow-500', red:'bg-red-600', gray:'bg-gray-500' };
   return (
-    <div className={`${bg[color]} rounded-lg py-2.5 px-1 flex flex-col items-center text-center`}>
-      <span className="text-white font-bold text-lg leading-none">{value}</span>
-      <span className="text-white/80 text-[9px] uppercase tracking-wide mt-0.5 leading-none">{label}</span>
+    <div className={`${bg[color]} rounded-lg md:rounded-xl py-2 px-1 md:p-3 flex flex-col items-center justify-center text-center`}>
+      <p className="text-white font-bold text-base md:text-2xl leading-none">{value}</p>
+      <p className="text-white/80 text-[9px] md:text-xs uppercase tracking-wide mt-0.5 leading-none">{label}</p>
     </div>
   );
 }
@@ -91,10 +98,10 @@ function ImageModal({ src, onClose }) {
     return () => window.removeEventListener('keydown', h);
   }, [onClose]);
   return (
-    <div className="fixed inset-0 bg-black/75 z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="relative w-full max-w-sm" onClick={e => e.stopPropagation()}>
-        <button onClick={onClose} className="absolute -top-7 right-0 text-white text-sm">✕ Close</button>
-        <img src={src} alt="Receipt" className="w-full rounded-xl shadow-xl object-contain max-h-[80vh]" />
+    <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="relative max-w-sm md:max-w-lg w-full" onClick={e => e.stopPropagation()}>
+        <button onClick={onClose} className="absolute -top-8 right-0 text-white text-sm font-medium">✕ Close</button>
+        <img src={src} alt="Payment screenshot" className="w-full rounded-xl shadow-2xl object-contain max-h-[80vh]" />
       </div>
     </div>
   );
@@ -118,25 +125,25 @@ function StatusDropdown({ currentStatus, submissionId, onUpdated }) {
     try {
       const { data } = await api.patch(`/api/admin/submissions/${submissionId}/status`, { status: s });
       if (data.success) onUpdated(submissionId, s);
-    } catch { alert('Failed to update.'); }
+    } catch { alert('Failed to update status.'); }
     finally { setBusy(false); setOpen(false); }
   };
 
   return (
     <div className="relative inline-block" ref={ref}>
       <button onClick={() => setOpen(o => !o)} disabled={busy}
-        className={`status-badge cursor-pointer ${STATUS_STYLES[currentStatus] || STATUS_STYLES['Invalid Screenshot']}`}>
+        className={`status-badge cursor-pointer select-none ${STATUS_STYLES[currentStatus] || STATUS_STYLES['Invalid Screenshot']}`}>
         {busy ? '…' : currentStatus}
-        <svg className="w-2.5 h-2.5 ml-1 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
+        <svg className="w-3 h-3 ml-1 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
       {open && (
-        <div className="absolute z-40 mt-1 right-0 bg-white border border-gray-200 rounded-lg shadow-xl min-w-[160px] overflow-hidden">
+        <div className="absolute z-30 mt-1 right-0 bg-white border border-gray-200 rounded-lg shadow-lg min-w-max overflow-hidden">
           {['Paid','Pending','Unpaid','Invalid Screenshot'].map(s => (
             <button key={s} onClick={() => update(s)}
-              className={`block w-full text-left px-3 py-2 text-xs hover:bg-gray-50 transition-colors
-                ${s === currentStatus ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-gray-700'}`}>
+              className={`block w-full text-left px-3 py-2 text-xs font-medium hover:bg-gray-50 transition-colors
+                ${s === currentStatus ? 'bg-blue-50 text-blue-700' : 'text-gray-700'}`}>
               {s}
             </button>
           ))}
@@ -153,17 +160,19 @@ function MobileCard({ sub, idx, expanded, onToggle, onStatusUpdated, onViewImage
       <div className="flex items-start justify-between gap-2 mb-1.5">
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-gray-800 truncate">{idx + 1}. {sub.name}</p>
-          <p className="text-xs text-gray-400 truncate mt-0.5">
-            {sub.designation || '—'} · {sub.division || '—'} {sub.circle ? `/ ${sub.circle}` : ''}
+          <p className="text-xs text-gray-500 mt-0.5 truncate">
+            {sub.designation || '—'} · {sub.division || '—'}
           </p>
         </div>
-        <StatusDropdown currentStatus={sub.paymentStatus} submissionId={sub._id} onUpdated={onStatusUpdated} />
+        <div className="flex-shrink-0">
+          <StatusDropdown currentStatus={sub.paymentStatus} submissionId={sub._id} onUpdated={onStatusUpdated} />
+        </div>
       </div>
 
       <div className="flex items-center justify-between">
         <span className="text-xs text-gray-600">
           Amount: <strong>{sub.extractedAmount != null ? `₹${sub.extractedAmount}` : '—'}</strong>
-          {sub.manualOverride && <span className="text-purple-500 ml-1 text-[10px]">(edited)</span>}
+          {sub.manualOverride && <span className="text-purple-600 ml-1 text-[10px]">(edited)</span>}
         </span>
         <div className="flex items-center gap-3">
           {sub.paymentScreenshot && (
@@ -179,13 +188,12 @@ function MobileCard({ sub, idx, expanded, onToggle, onStatusUpdated, onViewImage
       <p className="text-xs text-gray-400 mt-1">{fmtDate(sub.submittedAt)}</p>
 
       {expanded && (
-        <div className="mt-2 bg-gray-50 rounded-lg p-2.5 grid grid-cols-2 gap-2">
+        <div className="mt-2 bg-gray-50 rounded-lg p-2.5 grid grid-cols-2 gap-x-3 gap-y-2">
           <KV label="Parent's Name"  v={sub.parentsName} />
-          <KV label="Religion"       v={sub.religion} />
-          <KV label="Caste"          v={sub.caste} />
+          <KV label="Religion/Caste" v={`${sub.religion} / ${sub.caste}`} />
           <KV label="Marital Status" v={sub.maritalStatus} />
-          <KV label="Education"      v={sub.educationQualifications} />
           <KV label="Circle"         v={sub.circle || '—'} />
+          <KV label="Education"      v={sub.educationQualifications} />
           <KV label="Address"        v={sub.residenceAddress} full />
           {sub.interests && <KV label="Interests" v={sub.interests} full />}
         </div>
@@ -267,43 +275,71 @@ export default function AdminPage() {
   return (
     <div className="min-h-screen bg-gray-50">
 
-      {/* Header */}
-      <header className="bg-gradient-to-r from-blue-900 to-blue-700 text-white">
-        <div className="max-w-screen-xl mx-auto px-3 py-3">
-          {/* Row 1: Title */}
-          <div className="mb-2">
-            <h1 className="text-sm font-bold leading-tight">TCTS — Admin Panel</h1>
-            <p className="text-blue-200 text-xs">
-              {adminUser?.name ? `👤 ${adminUser.name}` : 'Telangana Commercial Taxes S.C./S.T.'}
-            </p>
+      {/* ── Header ── */}
+      <header className="bg-gradient-to-r from-blue-900 to-blue-700 text-white shadow-md">
+        <div className="max-w-screen-xl mx-auto px-3 md:px-6 py-3 md:py-4">
+
+          {/* Mobile layout: stacked */}
+          <div className="flex flex-col gap-2 md:hidden">
+            <div>
+              <h1 className="text-sm font-bold leading-tight">TCTS Association — Admin Panel</h1>
+              {adminUser?.name && <p className="text-blue-200 text-xs">👤 {adminUser.name}</p>}
+            </div>
+            <div className="flex gap-2">
+              <button onClick={downloadExcel}
+                className="flex-1 flex items-center justify-center gap-1.5 bg-green-500 hover:bg-green-600 text-white font-semibold text-xs py-2 rounded-lg transition-colors">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0119 9.414V19a2 2 0 01-2 2z" />
+                </svg>
+                Download Excel
+              </button>
+              <button onClick={logout}
+                className="flex items-center gap-1.5 bg-white/15 hover:bg-white/25 text-white text-xs py-2 px-3 rounded-lg transition-colors">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                Logout
+              </button>
+            </div>
           </div>
-          {/* Row 2: Buttons */}
-          <div className="flex items-center gap-2">
-            <button onClick={downloadExcel}
-              className="flex-1 flex items-center justify-center gap-1.5 bg-green-500 hover:bg-green-600 text-white font-semibold text-xs py-2 rounded-lg transition-colors">
-              <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0119 9.414V19a2 2 0 01-2 2z" />
-              </svg>
-              Download Excel
-            </button>
-            <button onClick={logout}
-              className="flex items-center gap-1 bg-white/15 hover:bg-white/25 text-white text-xs py-2 px-3 rounded-lg transition-colors">
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-              </svg>
-              Logout
-            </button>
+
+          {/* Desktop layout: single row (original) */}
+          <div className="hidden md:flex items-center justify-between gap-4">
+            <div>
+              <h1 className="text-lg font-bold leading-tight">TCTS Association — Admin Panel</h1>
+              <p className="text-blue-200 text-xs">Telangana Commercial Taxes S.C./S.T. Employees Association</p>
+            </div>
+            <div className="flex items-center gap-3">
+              {adminUser?.name && <span className="text-blue-200 text-sm">👤 {adminUser.name}</span>}
+              <button onClick={downloadExcel}
+                className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors shadow">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0119 9.414V19a2 2 0 01-2 2z" />
+                </svg>
+                Download Excel
+              </button>
+              <button onClick={logout}
+                className="flex items-center gap-1.5 bg-white/15 hover:bg-white/25 text-white text-sm px-4 py-2.5 rounded-lg transition-colors">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+                Logout
+              </button>
+            </div>
           </div>
+
         </div>
       </header>
 
-      <main className="max-w-screen-xl mx-auto px-3 py-3 space-y-3">
+      <main className="max-w-screen-xl mx-auto px-3 md:px-6 py-3 md:py-6 space-y-3 md:space-y-5">
 
         {/* Stats */}
         {stats && (
-          <div className="grid grid-cols-5 gap-1.5">
+          <div className="grid grid-cols-5 gap-1.5 md:gap-3">
             <StatCard label="Total"   value={stats.total}   color="blue"   />
             <StatCard label="Paid"    value={stats.paid}    color="green"  />
             <StatCard label="Pending" value={stats.pending} color="yellow" />
@@ -316,53 +352,81 @@ export default function AdminPage() {
         <ExpectedAmountSetting />
 
         {/* Filters */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-3">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Filters</p>
-          <div className="grid grid-cols-2 gap-2">
-            <div className="col-span-2">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 md:p-4">
+          <h2 className="text-xs md:text-sm font-semibold text-gray-700 mb-2 uppercase tracking-wide">Filters</h2>
+
+          {/* Mobile: stacked */}
+          <div className="grid grid-cols-1 gap-2 md:hidden">
+            <div>
               <label className="field-label">Search</label>
               <input type="search" value={search} onChange={e => setSearch(e.target.value)}
-                placeholder="Name, Designation, Division…" className="field-input text-xs py-1.5" />
+                placeholder="Name, Designation, Division…" className="field-input text-sm py-2" />
             </div>
             <div>
               <label className="field-label">Payment Status</label>
               <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
-                className="field-input text-xs py-1.5">
+                className="field-input text-sm py-2">
+                {STATUSES.map(s => <option key={s}>{s}</option>)}
+              </select>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="field-label">From Date</label>
+                <input type="date" value={filterStartDate} onChange={e => setFilterStartDate(e.target.value)}
+                  className="field-input text-sm py-2" />
+              </div>
+              <div>
+                <label className="field-label">To Date</label>
+                <input type="date" value={filterEndDate} onChange={e => setFilterEndDate(e.target.value)}
+                  className="field-input text-sm py-2" />
+              </div>
+            </div>
+          </div>
+
+          {/* Desktop: 4 columns (original) */}
+          <div className="hidden md:grid md:grid-cols-4 gap-3">
+            <div>
+              <label className="field-label">Payment Status</label>
+              <select value={filterStatus} onChange={e => setFilterStatus(e.target.value)}
+                className="field-input text-sm py-2">
                 {STATUSES.map(s => <option key={s}>{s}</option>)}
               </select>
             </div>
             <div>
-              {/* spacer, keeps grid balanced */}
-            </div>
-            <div>
               <label className="field-label">From Date</label>
               <input type="date" value={filterStartDate} onChange={e => setFilterStartDate(e.target.value)}
-                className="field-input text-xs py-1.5" />
+                className="field-input text-sm py-2" />
             </div>
             <div>
               <label className="field-label">To Date</label>
               <input type="date" value={filterEndDate} onChange={e => setFilterEndDate(e.target.value)}
-                className="field-input text-xs py-1.5" />
+                className="field-input text-sm py-2" />
+            </div>
+            <div>
+              <label className="field-label">Search</label>
+              <input type="search" value={search} onChange={e => setSearch(e.target.value)}
+                placeholder="Name, Designation, Division…" className="field-input text-sm py-2" />
             </div>
           </div>
-          <div className="flex gap-2 mt-2">
-            <button onClick={fetchData} className="btn-primary py-1.5 px-4 text-xs">Apply</button>
+
+          <div className="flex gap-2 mt-2.5">
+            <button onClick={fetchData} className="btn-primary py-2 px-4 text-sm">Apply</button>
             <button onClick={() => { setFilterStatus('All'); setFilterStartDate(''); setFilterEndDate(''); setSearch(''); }}
-              className="btn-secondary py-1.5 px-4 text-xs">Reset</button>
+              className="btn-secondary py-2 px-4 text-sm">Reset</button>
           </div>
         </div>
 
         {/* Submissions */}
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="px-3 py-2 border-b border-gray-100 flex items-center justify-between">
-            <span className="text-xs font-semibold text-gray-700">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="px-3 md:px-5 py-2.5 border-b border-gray-100 flex items-center justify-between">
+            <h2 className="text-xs md:text-sm font-semibold text-gray-700">
               Submissions
               {!loading && (
-                <span className="ml-1.5 bg-blue-100 text-blue-700 text-[10px] px-1.5 py-0.5 rounded-full">
+                <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-normal">
                   {displayed.length}{displayed.length !== submissions.length && ` / ${submissions.length}`}
                 </span>
               )}
-            </span>
+            </h2>
             <button onClick={fetchData} className="text-xs text-blue-600 flex items-center gap-1">
               <svg className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
@@ -372,22 +436,22 @@ export default function AdminPage() {
             </button>
           </div>
 
-          {error && <p className="px-3 py-2 text-xs text-red-600 bg-red-50">{error}</p>}
+          {error && <div className="px-4 py-3 text-sm text-red-700 bg-red-50 border-b border-red-100">{error}</div>}
 
           {loading ? (
-            <div className="py-12 text-center">
-              <svg className="w-6 h-6 animate-spin mx-auto text-blue-400 mb-2" fill="none" viewBox="0 0 24 24">
+            <div className="py-14 text-center">
+              <svg className="w-7 h-7 animate-spin mx-auto mb-3 text-blue-400" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z" />
               </svg>
-              <p className="text-xs text-gray-400">Loading…</p>
+              <p className="text-sm text-gray-400">Loading submissions…</p>
             </div>
           ) : displayed.length === 0 ? (
-            <p className="py-10 text-center text-sm text-gray-400">No submissions found.</p>
+            <div className="py-14 text-center text-gray-400 text-sm">No submissions found.</div>
           ) : (
             <>
-              {/* Mobile */}
-              <div className="md:hidden">
+              {/* Mobile cards */}
+              <div className="md:hidden divide-y divide-gray-100">
                 {displayed.map((sub, idx) => (
                   <MobileCard key={sub._id} sub={sub} idx={idx}
                     expanded={expandedId === sub._id}
@@ -397,14 +461,15 @@ export default function AdminPage() {
                 ))}
               </div>
 
-              {/* Desktop */}
+              {/* Desktop table (original) */}
               <div className="hidden md:block overflow-x-auto">
-                <table className="w-full text-xs">
+                <table className="w-full text-sm">
                   <thead>
-                    <tr className="bg-gray-50 border-b border-gray-100 text-left">
-                      {['#','Name','Parent','Religion/Caste','Marital','Designation','Div/Circle',
-                        'Education','Address','Amount','Status','Receipt','Date',''].map(h => (
-                        <th key={h} className="px-3 py-2 text-[10px] font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">{h}</th>
+                    <tr className="bg-gray-50 border-b border-gray-200 text-left">
+                      {['#','Name',"Parent's Name",'Religion / Caste','Marital Status',
+                        'Designation','Division / Circle','Education','Address',
+                        'Amount (₹)','Status','Screenshot','Date',''].map(h => (
+                        <th key={h} className="px-3 py-2.5 text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -412,46 +477,46 @@ export default function AdminPage() {
                     {displayed.map((sub, idx) => (
                       <>
                         <tr key={sub._id}
-                          className={`hover:bg-blue-50/30 cursor-pointer transition-colors ${expandedId === sub._id ? 'bg-blue-50/40' : ''}`}
+                          className={`hover:bg-blue-50/40 cursor-pointer transition-colors ${expandedId === sub._id ? 'bg-blue-50/60' : ''}`}
                           onClick={() => setExpandedId(id => id === sub._id ? null : sub._id)}>
-                          <td className="px-3 py-2 text-gray-400">{idx + 1}</td>
-                          <td className="px-3 py-2 font-medium text-gray-800 whitespace-nowrap">{sub.name}</td>
-                          <td className="px-3 py-2 text-gray-600 whitespace-nowrap">{sub.parentsName}</td>
-                          <td className="px-3 py-2 text-gray-600 whitespace-nowrap">{sub.religion} / {sub.caste}</td>
-                          <td className="px-3 py-2 text-gray-600 whitespace-nowrap">{sub.maritalStatus}</td>
-                          <td className="px-3 py-2 text-gray-600 whitespace-nowrap">{sub.designation || '—'}</td>
-                          <td className="px-3 py-2 text-gray-600 whitespace-nowrap">
-                            {sub.division || '—'}{sub.circle && ` / ${sub.circle}`}
+                          <td className="px-3 py-2.5 text-gray-400 text-xs">{idx + 1}</td>
+                          <td className="px-3 py-2.5 font-medium text-gray-800 whitespace-nowrap">{sub.name}</td>
+                          <td className="px-3 py-2.5 text-gray-600 whitespace-nowrap">{sub.parentsName}</td>
+                          <td className="px-3 py-2.5 text-gray-600 whitespace-nowrap">{sub.religion} / {sub.caste}</td>
+                          <td className="px-3 py-2.5 text-gray-600 whitespace-nowrap">{sub.maritalStatus}</td>
+                          <td className="px-3 py-2.5 text-gray-600 whitespace-nowrap">{sub.designation || '—'}</td>
+                          <td className="px-3 py-2.5 text-gray-600 whitespace-nowrap">
+                            {sub.division || '—'}{sub.circle && <span className="text-gray-400"> / {sub.circle}</span>}
                           </td>
-                          <td className="px-3 py-2 text-gray-600 max-w-[120px] truncate">{sub.educationQualifications}</td>
-                          <td className="px-3 py-2 text-gray-600 max-w-[140px] truncate">{sub.residenceAddress}</td>
-                          <td className="px-3 py-2 font-semibold whitespace-nowrap">
+                          <td className="px-3 py-2.5 text-gray-600 max-w-[130px] truncate">{sub.educationQualifications}</td>
+                          <td className="px-3 py-2.5 text-gray-600 max-w-[150px] truncate">{sub.residenceAddress}</td>
+                          <td className="px-3 py-2.5 font-semibold text-gray-800 whitespace-nowrap">
                             {sub.extractedAmount != null ? `₹${sub.extractedAmount}` : '—'}
                           </td>
-                          <td className="px-3 py-2" onClick={e => e.stopPropagation()}>
+                          <td className="px-3 py-2.5" onClick={e => e.stopPropagation()}>
                             <StatusDropdown currentStatus={sub.paymentStatus} submissionId={sub._id} onUpdated={handleStatusUpdated} />
-                            {sub.manualOverride && <span className="text-[9px] text-purple-500 ml-1">(e)</span>}
+                            {sub.manualOverride && <span className="ml-1 text-[10px] text-purple-600">(edited)</span>}
                           </td>
-                          <td className="px-3 py-2" onClick={e => e.stopPropagation()}>
+                          <td className="px-3 py-2.5" onClick={e => e.stopPropagation()}>
                             {sub.paymentScreenshot
-                              ? <button onClick={() => setImgModal(imgUrl(sub.paymentScreenshot))} className="text-blue-600 underline">View</button>
-                              : <span className="text-gray-400">—</span>}
+                              ? <button onClick={() => setImgModal(imgUrl(sub.paymentScreenshot))} className="text-blue-600 hover:text-blue-800 text-xs underline font-medium">View</button>
+                              : <span className="text-gray-400 text-xs">None</span>}
                           </td>
-                          <td className="px-3 py-2 text-gray-400 whitespace-nowrap">{fmtDate(sub.submittedAt)}</td>
-                          <td className="px-3 py-2">
-                            <svg className={`w-3.5 h-3.5 text-gray-400 transition-transform ${expandedId === sub._id ? 'rotate-180' : ''}`}
+                          <td className="px-3 py-2.5 text-gray-500 text-xs whitespace-nowrap">{fmtDate(sub.submittedAt)}</td>
+                          <td className="px-3 py-2.5">
+                            <svg className={`w-4 h-4 text-gray-400 transition-transform ${expandedId === sub._id ? 'rotate-180' : ''}`}
                               fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                             </svg>
                           </td>
                         </tr>
                         {expandedId === sub._id && (
-                          <tr key={`${sub._id}-x`} className="bg-blue-50/30">
-                            <td colSpan={14} className="px-4 py-3">
-                              <div className="grid grid-cols-3 gap-4 text-xs">
-                                <KV label="Interests" v={sub.interests || '—'} />
-                                <KV label="Full Address" v={sub.residenceAddress} />
-                                <KV label="OCR Text" v={sub.ocrText ? sub.ocrText.slice(0,200) + '…' : 'N/A'} />
+                          <tr key={`${sub._id}-detail`} className="bg-blue-50/40">
+                            <td colSpan={14} className="px-5 py-3">
+                              <div className="grid grid-cols-3 gap-4 text-sm">
+                                <Detail label="Interests / Hobbies" value={sub.interests || '—'} />
+                                <Detail label="Full Address" value={sub.residenceAddress} />
+                                <Detail label="OCR Text" value={sub.ocrText ? sub.ocrText.substring(0, 200) + '…' : 'N/A'} mono />
                               </div>
                             </td>
                           </tr>
@@ -468,6 +533,17 @@ export default function AdminPage() {
       </main>
 
       {imgModal && <ImageModal src={imgModal} onClose={() => setImgModal(null)} />}
+    </div>
+  );
+}
+
+function Detail({ label, value, mono }) {
+  return (
+    <div>
+      <p className="text-xs text-gray-500 font-semibold uppercase tracking-wide mb-0.5">{label}</p>
+      <p className={`text-gray-700 text-xs leading-relaxed ${mono ? 'font-mono bg-gray-100 p-2 rounded text-[11px]' : ''}`}>
+        {value}
+      </p>
     </div>
   );
 }
