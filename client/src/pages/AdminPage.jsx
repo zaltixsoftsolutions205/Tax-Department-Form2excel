@@ -1,6 +1,11 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import api from '../api';
 
+const API_BASE = import.meta.env.VITE_API_URL || '';
+
+// Builds full URL to a screenshot stored on the backend (Render in production)
+const imgUrl = (path) => `${API_BASE}/${path}`;
+
 const STATUSES = ['All', 'Paid', 'Pending', 'Unpaid', 'Invalid Screenshot'];
 
 const STATUS_STYLES = {
@@ -180,7 +185,7 @@ function MobileCard({ sub, idx, expanded, onToggle, onStatusUpdated, onViewImage
           {sub.manualOverride && <span className="text-purple-600 ml-1">(edited)</span>}
         </span>
         {sub.paymentScreenshot && (
-          <button onClick={() => onViewImage(`/${sub.paymentScreenshot}`)}
+          <button onClick={() => onViewImage(imgUrl(sub.paymentScreenshot))}
             className="text-xs text-blue-600 underline">View Receipt</button>
         )}
       </div>
@@ -432,7 +437,7 @@ export default function AdminPage() {
                           </td>
                           <td className="px-3 py-2" onClick={e => e.stopPropagation()}>
                             {sub.paymentScreenshot
-                              ? <button onClick={() => setImgModal(`/${sub.paymentScreenshot}`)} className="text-blue-600 text-xs underline">View</button>
+                              ? <button onClick={() => setImgModal(imgUrl(sub.paymentScreenshot))} className="text-blue-600 text-xs underline">View</button>
                               : <span className="text-gray-400">—</span>}
                           </td>
                           <td className="px-3 py-2 text-gray-400 whitespace-nowrap">{fmtDate(sub.submittedAt)}</td>
