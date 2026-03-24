@@ -46,13 +46,13 @@ export default function FormPage() {
 
   const validate = () => {
     const e = {};
-    if (!form.name.trim())                    e.name = 'Name is required.';
-    if (!form.parentsName.trim())             e.parentsName = "Parent's name is required.";
-    if (!form.religion.trim())                e.religion = 'Religion is required.';
-    if (!form.caste.trim())                   e.caste = 'Caste is required.';
-    if (!form.maritalStatus)                  e.maritalStatus = 'Please select marital status.';
-    if (!form.educationQualifications.trim()) e.educationQualifications = 'Education qualifications are required.';
-    if (!form.residenceAddress.trim())        e.residenceAddress = 'Residence address is required.';
+    if (!form.name.trim())                    e.name = 'Required';
+    if (!form.parentsName.trim())             e.parentsName = 'Required';
+    if (!form.religion.trim())                e.religion = 'Required';
+    if (!form.caste.trim())                   e.caste = 'Required';
+    if (!form.maritalStatus)                  e.maritalStatus = 'Required';
+    if (!form.educationQualifications.trim()) e.educationQualifications = 'Required';
+    if (!form.residenceAddress.trim())        e.residenceAddress = 'Required';
     return e;
   };
 
@@ -73,9 +73,9 @@ export default function FormPage() {
         data.paymentStatus === 'Paid'
           ? `Thank you! Your payment of ₹${data.extractedAmount} has been verified.`
           : data.paymentStatus === 'Pending'
-          ? `Form submitted. Payment amount ₹${data.extractedAmount} seems less than required.`
+          ? `Form submitted. Payment ₹${data.extractedAmount} is less than required.`
           : data.paymentStatus === 'Invalid Screenshot'
-          ? 'Form submitted. We could not read the payment amount from your screenshot.'
+          ? 'Form submitted. Could not read payment amount from screenshot.'
           : 'Form submitted. No payment screenshot uploaded.'
       );
     } catch (err) {
@@ -83,21 +83,21 @@ export default function FormPage() {
     } finally { setSubmitting(false); }
   };
 
+  /* ── Success Screen ─────────────────────────────────────────────────────── */
   if (submitted) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-gradient-to-br from-blue-50 to-indigo-100">
-        <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 max-w-md w-full text-center">
-          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 sm:w-10 sm:h-10 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <div className="min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="bg-white rounded-2xl shadow-xl p-6 sm:p-8 w-full max-w-sm text-center">
+          <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
+            <svg className="w-9 h-9 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">Submitted Successfully!</h2>
-          <p className="text-gray-600 mb-6 text-sm leading-relaxed">{serverMsg}</p>
+          <h2 className="text-xl font-bold text-gray-800 mb-2">Submitted!</h2>
+          <p className="text-gray-500 text-sm leading-relaxed mb-5">{serverMsg}</p>
           <button
             onClick={() => { setSubmitted(false); setForm(INITIAL); setFile(null); setPreview(null); }}
-            className="btn-primary w-full"
-          >
+            className="btn-primary w-full">
             Submit Another Response
           </button>
         </div>
@@ -105,55 +105,57 @@ export default function FormPage() {
     );
   }
 
+  /* ── Form ───────────────────────────────────────────────────────────────── */
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-4 sm:py-8 px-3 sm:px-4">
 
       {/* Header */}
-      <div className="max-w-2xl mx-auto mb-4 sm:mb-6">
-        <div className="bg-gradient-to-r from-blue-900 to-blue-700 rounded-xl sm:rounded-2xl p-4 sm:p-6 text-white shadow-lg">
-          <div className="flex items-center gap-3 sm:gap-4">
-            <div className="w-11 h-11 sm:w-14 sm:h-14 bg-white/20 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
-              <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <div className="max-w-2xl mx-auto mb-4">
+        <div className="bg-gradient-to-r from-blue-900 to-blue-700 rounded-xl p-4 text-white shadow-lg">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
+              <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                   d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
             </div>
             <div>
-              <h1 className="text-base sm:text-xl font-bold leading-tight">TELANGANA COMMERCIAL TAXES</h1>
-              <p className="text-blue-200 text-xs sm:text-sm font-medium mt-0.5">S.C./S.T. EMPLOYEES ASSOCIATION</p>
+              <h1 className="text-sm sm:text-base font-bold leading-tight">TELANGANA COMMERCIAL TAXES</h1>
+              <p className="text-blue-200 text-xs font-medium">S.C./S.T. EMPLOYEES ASSOCIATION</p>
               <p className="text-blue-100 text-xs mt-0.5">Member Registration Form</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Form card */}
-      <div className="max-w-2xl mx-auto bg-white rounded-xl sm:rounded-2xl shadow-lg overflow-hidden">
+      {/* Card */}
+      <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
         <form onSubmit={handleSubmit} noValidate>
 
+          {/* Personal Details */}
           <SectionHeader icon="👤" title="Personal Details" />
-          <div className="px-3 sm:px-6 py-4 sm:py-5 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-5">
-            <Field label="Full Name" required error={errors.name}>
+          <div className="px-3 sm:px-6 py-4 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <F label="Full Name" required error={errors.name}>
               <input type="text" name="name" value={form.name} onChange={handleChange}
                 placeholder="Enter your full name"
                 className={`field-input ${errors.name ? 'field-input-error' : ''}`} />
-            </Field>
-            <Field label="Parent's Name" required error={errors.parentsName}>
+            </F>
+            <F label="Parent's Name" required error={errors.parentsName}>
               <input type="text" name="parentsName" value={form.parentsName} onChange={handleChange}
                 placeholder="Father's / Mother's name"
                 className={`field-input ${errors.parentsName ? 'field-input-error' : ''}`} />
-            </Field>
-            <Field label="Religion" required error={errors.religion}>
+            </F>
+            <F label="Religion" required error={errors.religion}>
               <input type="text" name="religion" value={form.religion} onChange={handleChange}
-                placeholder="e.g., Hindu, Muslim, Christian"
+                placeholder="e.g., Hindu, Muslim"
                 className={`field-input ${errors.religion ? 'field-input-error' : ''}`} />
-            </Field>
-            <Field label="Caste" required error={errors.caste}>
+            </F>
+            <F label="Caste" required error={errors.caste}>
               <input type="text" name="caste" value={form.caste} onChange={handleChange}
                 placeholder="Enter your caste"
                 className={`field-input ${errors.caste ? 'field-input-error' : ''}`} />
-            </Field>
-            <Field label="Marital Status" required error={errors.maritalStatus} className="sm:col-span-2">
+            </F>
+            <F label="Marital Status" required error={errors.maritalStatus} full>
               <select name="maritalStatus" value={form.maritalStatus} onChange={handleChange}
                 className={`field-input ${errors.maritalStatus ? 'field-input-error' : ''}`}>
                 <option value="">-- Select --</option>
@@ -162,110 +164,116 @@ export default function FormPage() {
                 <option>Divorced</option>
                 <option>Widowed</option>
               </select>
-            </Field>
+            </F>
           </div>
 
+          {/* Working Place */}
           <SectionHeader icon="🏢" title="Working Place" />
-          <div className="px-3 sm:px-6 py-4 sm:py-5 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5">
-            <Field label="Designation">
+          <div className="px-3 sm:px-6 py-4 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+            <F label="Designation">
               <input type="text" name="designation" value={form.designation} onChange={handleChange}
                 placeholder="e.g., Deputy Commissioner" className="field-input" />
-            </Field>
-            <Field label="Division">
+            </F>
+            <F label="Division">
               <input type="text" name="division" value={form.division} onChange={handleChange}
                 placeholder="Division name" className="field-input" />
-            </Field>
-            <Field label="Circle">
+            </F>
+            <F label="Circle">
               <input type="text" name="circle" value={form.circle} onChange={handleChange}
                 placeholder="Circle name" className="field-input" />
-            </Field>
+            </F>
           </div>
 
+          {/* Qualifications & Address */}
           <SectionHeader icon="🎓" title="Qualifications & Address" />
-          <div className="px-3 sm:px-6 py-4 sm:py-5 grid grid-cols-1 gap-3 sm:gap-5">
-            <Field label="Education Qualifications" required error={errors.educationQualifications}>
+          <div className="px-3 sm:px-6 py-4 grid grid-cols-1 gap-3 sm:gap-4">
+            <F label="Education Qualifications" required error={errors.educationQualifications}>
               <input type="text" name="educationQualifications" value={form.educationQualifications}
-                onChange={handleChange} placeholder="e.g., B.Com, B.Sc, M.A., etc."
+                onChange={handleChange} placeholder="e.g., B.Com, B.Sc, M.A."
                 className={`field-input ${errors.educationQualifications ? 'field-input-error' : ''}`} />
-            </Field>
-            <Field label="Residence Address" required error={errors.residenceAddress}>
+            </F>
+            <F label="Residence Address" required error={errors.residenceAddress}>
               <textarea name="residenceAddress" value={form.residenceAddress} onChange={handleChange}
                 rows={3} placeholder="Door No., Street, Area, District, PIN Code"
                 className={`field-input resize-none ${errors.residenceAddress ? 'field-input-error' : ''}`} />
-            </Field>
-            <Field label="Interests / Hobbies">
+            </F>
+            <F label="Interests / Hobbies">
               <input type="text" name="interests" value={form.interests} onChange={handleChange}
                 placeholder="e.g., Reading, Cricket, Music" className="field-input" />
-            </Field>
+            </F>
           </div>
 
+          {/* Payment Screenshot */}
           <SectionHeader icon="💳" title="Payment Screenshot" />
-          <div className="px-3 sm:px-6 py-4 sm:py-5">
-            <p className="text-xs sm:text-sm text-gray-500 mb-3">
-              Upload your membership payment screenshot (JPEG / PNG, max 2 MB).
-              Expected amount: <strong className="text-blue-700">₹500</strong>
+          <div className="px-3 sm:px-6 py-4">
+            <p className="text-xs text-gray-500 mb-3">
+              Upload membership payment screenshot — JPEG / PNG, max 2 MB.
+              Expected: <strong className="text-blue-700">₹500</strong>
             </p>
             {!preview ? (
               <label htmlFor="fileInput"
-                className="flex flex-col items-center justify-center w-full h-28 sm:h-36 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors duration-150">
-                <svg className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400 mb-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                className="flex flex-col items-center justify-center w-full h-28 sm:h-36 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">
+                <svg className="w-8 h-8 text-gray-400 mb-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
                     d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                <span className="text-sm text-gray-500 font-medium">Click to upload screenshot</span>
+                <span className="text-sm text-gray-500 font-medium">Tap to upload</span>
                 <span className="text-xs text-gray-400 mt-1">JPEG or PNG · max 2 MB</span>
                 <input id="fileInput" ref={fileRef} type="file" accept="image/jpeg,image/jpg,image/png"
                   className="hidden" onChange={handleFile} />
               </label>
             ) : (
               <div className="relative inline-block">
-                <img src={preview} alt="Payment screenshot preview"
-                  className="max-h-44 sm:max-h-52 rounded-xl border border-gray-200 shadow-sm object-contain" />
+                <img src={preview} alt="preview"
+                  className="max-h-44 rounded-xl border border-gray-200 shadow-sm object-contain" />
                 <button type="button" onClick={removeFile}
-                  className="absolute -top-2 -right-2 w-6 h-6 sm:w-7 sm:h-7 bg-red-600 text-white rounded-full flex items-center justify-center shadow hover:bg-red-700 transition-colors">
-                  <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-600 text-white rounded-full flex items-center justify-center shadow hover:bg-red-700">
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
-                <p className="text-xs text-gray-500 mt-2">{file?.name}</p>
+                <p className="text-xs text-gray-400 mt-1.5">{file?.name}</p>
               </div>
             )}
             {errors.file && <p className="field-error mt-2">{errors.file}</p>}
           </div>
 
+          {/* Server error */}
           {serverMsg && !submitted && (
-            <div className="mx-3 sm:mx-6 mb-2 px-3 sm:px-4 py-2.5 sm:py-3 bg-red-50 border border-red-200 rounded-lg text-xs sm:text-sm text-red-700">
+            <div className="mx-3 sm:mx-6 mb-3 px-3 py-2.5 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
               {serverMsg}
             </div>
           )}
 
-          <div className="px-3 sm:px-6 py-4 sm:py-6 bg-gray-50 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <p className="text-xs text-gray-400">
-              Fields marked <span className="text-red-500 font-semibold">*</span> are mandatory.
+          {/* Footer */}
+          <div className="px-3 sm:px-6 py-4 bg-gray-50 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <p className="text-xs text-gray-400 self-start sm:self-auto">
+              <span className="text-red-500">*</span> required fields
             </p>
-            <button type="submit" disabled={submitting} className="btn-primary w-full sm:w-auto px-8 sm:px-10">
-              {submitting ? <><SpinnerIcon /> Submitting…</> : <>
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
-                Submit Form
-              </>}
+            <button type="submit" disabled={submitting}
+              className="btn-primary w-full sm:w-auto px-8">
+              {submitting
+                ? <><SpinnerIcon /> Submitting…</>
+                : <><svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg> Submit Form</>}
             </button>
           </div>
 
         </form>
       </div>
 
-      <p className="text-center text-xs text-gray-400 mt-4 sm:mt-6">
-        Telangana Commercial Taxes S.C./S.T. Employees Association &copy; {new Date().getFullYear()}
+      <p className="text-center text-xs text-gray-400 mt-5">
+        TCTS S.C./S.T. Employees Association &copy; {new Date().getFullYear()}
       </p>
     </div>
   );
 }
 
-function Field({ label, required, error, children, className = '' }) {
+/* ── Helpers ─────────────────────────────────────────────────────────────── */
+function F({ label, required, error, children, full }) {
   return (
-    <div className={className}>
+    <div className={full ? 'sm:col-span-2' : ''}>
       <label className="field-label">
         {label}{required && <span className="text-red-500 ml-0.5">*</span>}
       </label>
@@ -277,9 +285,9 @@ function Field({ label, required, error, children, className = '' }) {
 
 function SectionHeader({ icon, title }) {
   return (
-    <div className="flex items-center gap-2 px-3 sm:px-6 py-2.5 bg-blue-50 border-t border-b border-blue-100">
-      <span className="text-sm sm:text-base">{icon}</span>
-      <h2 className="text-xs sm:text-sm font-semibold text-blue-800 uppercase tracking-wide">{title}</h2>
+    <div className="flex items-center gap-2 px-3 sm:px-6 py-2 bg-blue-50 border-t border-b border-blue-100">
+      <span className="text-sm">{icon}</span>
+      <h2 className="text-xs font-semibold text-blue-800 uppercase tracking-wide">{title}</h2>
     </div>
   );
 }
