@@ -88,14 +88,12 @@ function StatCard({ label, value, color }) {
     gray:   'bg-gray-500',
   };
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-2.5 sm:p-4 flex items-center gap-2.5 sm:gap-4">
-      <div className={`w-9 h-9 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl ${colors[color]} flex items-center justify-center flex-shrink-0`}>
-        <span className="text-white text-sm sm:text-lg font-bold">{value}</span>
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-2 sm:p-4 flex flex-col items-center justify-center text-center gap-1">
+      <div className={`w-8 h-8 sm:w-11 sm:h-11 rounded-lg ${colors[color]} flex items-center justify-center`}>
+        <span className="text-white text-sm sm:text-xl font-bold">{value}</span>
       </div>
-      <div>
-        <p className="text-xs text-gray-500 uppercase tracking-wide font-medium leading-tight">{label}</p>
-        <p className="text-lg sm:text-2xl font-bold text-gray-800 leading-tight">{value}</p>
-      </div>
+      <p className="text-gray-800 font-bold text-sm sm:text-xl leading-none">{value}</p>
+      <p className="text-gray-400 text-xs uppercase tracking-wide leading-none">{label}</p>
     </div>
   );
 }
@@ -301,7 +299,7 @@ export default function AdminPage() {
 
         {/* Stats */}
         {stats && (
-          <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-3">
+          <div className="grid grid-cols-5 gap-2">
             <StatCard label="Total"   value={stats.total}   color="blue"   />
             <StatCard label="Paid"    value={stats.paid}    color="green"  />
             <StatCard label="Pending" value={stats.pending} color="yellow" />
