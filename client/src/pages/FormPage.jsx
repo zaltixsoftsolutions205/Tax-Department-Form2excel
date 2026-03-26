@@ -152,8 +152,8 @@ export default function FormPage() {
               <select name="maritalStatus" value={form.maritalStatus} onChange={handleChange}
                 className={`field-input ${errors.maritalStatus ? 'field-input-error' : ''}`}>
                 <option value="">-- Select --</option>
-                <option>Single</option><option>Married</option>
-                <option>Divorced</option><option>Widowed</option>
+                <option>Married</option>
+                <option>Unmarried</option>
               </select>
             </F>
           </div>

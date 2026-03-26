@@ -30,7 +30,7 @@ const submissionSchema = new mongoose.Schema(
     maritalStatus: {
       type: String,
       required: [true, 'Marital status is required'],
-      enum: ['Single', 'Married', 'Divorced', 'Widowed'],
+      enum: ['Married', 'Unmarried'],
     },
 
     // Working Place

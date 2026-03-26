@@ -30,7 +30,7 @@ const formValidation = [
     .isLength({ max: 50 }).escape(),
 
   body('maritalStatus')
-    .isIn(['Single', 'Married', 'Divorced', 'Widowed'])
+    .isIn(['Married', 'Unmarried'])
     .withMessage('Invalid marital status'),
 
   body('designation').optional().trim().isLength({ max: 100 }).escape(),
