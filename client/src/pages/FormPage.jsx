@@ -3,6 +3,7 @@ import api from '../api';
 
 const AMOUNT = 1;
 const UPI_ID = '9398654692@ybl';
+const UPI_LINK = `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent('TCTS Association')}&am=${AMOUNT}&cu=INR&tn=${encodeURIComponent('TCTS Membership Fee')}`;
 
 const INITIAL = {
   name: '', parentsName: '', religion: '', caste: '',
@@ -209,15 +210,18 @@ export default function FormPage() {
                 <p className="text-xl font-bold text-blue-700">₹{AMOUNT}</p>
               </div>
               <p className="text-xs text-gray-500 mb-3">
-                Open <strong>PhonePe / GPay</strong> → Send Money → search the UPI ID below → pay ₹{AMOUNT}. Then enter your Transaction ID.
+                Click <strong>Pay Now</strong> to open PhonePe / GPay with ₹{AMOUNT} pre-filled. After payment, enter your Transaction ID below.
               </p>
-              <div className="flex items-center justify-between bg-white border border-blue-100 rounded-lg px-3 py-2.5">
-                <div>
-                  <p className="text-[10px] text-gray-400 mb-0.5">UPI ID</p>
-                  <p className="text-sm font-semibold text-gray-800 tracking-wide">{UPI_ID}</p>
-                </div>
-                <CopyButton text={UPI_ID} />
-              </div>
+              <a
+                href={UPI_LINK}
+                className="flex items-center justify-center gap-2 w-full bg-blue-700 hover:bg-blue-800 active:bg-blue-900 text-white font-semibold py-3 rounded-xl text-sm transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                </svg>
+                Pay ₹{AMOUNT} Now
+              </a>
             </div>
 
             {/* Transaction ID */}
@@ -315,16 +319,6 @@ function F({ label, required, error, children, className = '' }) {
   );
 }
 
-function CopyButton({ text }) {
-  const [copied, setCopied] = useState(false);
-  return (
-    <button type="button"
-      onClick={() => { navigator.clipboard?.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
-      className="text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1.5 rounded-lg flex-shrink-0 font-medium">
-      {copied ? '✓ Copied' : 'Copy'}
-    </button>
-  );
-}
 
 function Spin() {
   return (
