@@ -4,7 +4,7 @@ import api from '../api';
 const AMOUNT  = 1; // TEST — change to 1000 before go-live
 
 // Bank details — stored in env vars, never shown in UI
-const ACCOUNT = import.meta.env.VITE_BANK_ACCOUNT || '081710100101758';
+const ACCOUNT = import.meta.env.VITE_BANK_ACCOUNT || '081710100101759';
 const IFSC    = import.meta.env.VITE_BANK_IFSC    || 'UBIN0808172';
 const HOLDER  = import.meta.env.VITE_BANK_HOLDER  || 'RANGANNAGARI GURUASHOK';
 
