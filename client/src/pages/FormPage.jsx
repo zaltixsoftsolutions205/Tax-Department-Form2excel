@@ -1,12 +1,12 @@
 import { useState, useRef, useCallback } from 'react';
 import api from '../api';
 
-const ACCOUNT_NAME = 'Rangannagari Guruashok';
-const ACCOUNT_NO   = '081710100101759';
+const ACCOUNT_NAME = 'Commercial Taxes SC and ST Employees Association';
+const ACCOUNT_NO   = '925010044679607';
 const BANK_NAME    = 'Union Bank of India';
 const IFSC         = 'UBIN080817';
 const BRANCH       = 'Kalakada';
-const AMOUNT       = 500;
+const AMOUNT       = 1000;
 
 const INITIAL = {
   name: '', parentsName: '', religion: '', caste: '',
