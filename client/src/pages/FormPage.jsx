@@ -1,14 +1,12 @@
 import { useState, useRef, useCallback } from 'react';
-import QRCode from 'react-qr-code';
 import api from '../api';
 
-const AMOUNT   = 500;
-const UPI_ID   = import.meta.env.VITE_UPI_ID   || 'aguru79621@ybl';
-const UPI_NAME = import.meta.env.VITE_UPI_NAME || 'Union Bank';
-
-// QR code value — scanned from inside PhonePe / GPay / Paytm
-// Fixed amount ₹500 works via QR (only browser deep links are blocked)
-const UPI_QR = `upi://pay?pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent(UPI_NAME)}&am=${AMOUNT}&cu=INR&tn=${encodeURIComponent('Membership Fee')}`;
+const AMOUNT       = 500;
+const ACCOUNT_NAME = 'Rangannagari Guruashok';
+const ACCOUNT_NO   = '081710100101759';
+const BANK_NAME    = 'Union Bank of India';
+const IFSC         = 'UBIN080817';
+const BRANCH       = 'Kalakada';
 
 const INITIAL = {
   name: '', parentsName: '', religion: '', caste: '',
@@ -212,42 +210,50 @@ export default function FormPage() {
           <SectionHeader icon="💳" title="Payment" />
           <div className="px-3 md:px-6 py-3 md:py-5 space-y-4">
 
-            {/* QR Code Payment */}
-            <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
-              <div className="flex items-center justify-between mb-3">
-                <p className="text-sm font-semibold text-gray-800">Membership Fee</p>
+            {/* Bank Account Details */}
+            <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-semibold text-gray-800">Pay Membership Fee</p>
                 <p className="text-2xl font-bold text-blue-700">₹{AMOUNT}</p>
               </div>
 
-              <p className="text-xs text-gray-500 mb-4">
-                Open <strong>PhonePe / GPay / Paytm</strong>, tap <strong>Scan QR</strong>, and scan the code below to pay <strong>₹{AMOUNT}</strong> directly.
+              <p className="text-xs text-gray-500">
+                Transfer <strong>₹{AMOUNT}</strong> to the bank account below using
+                Net Banking, PhonePe, GPay, or any UPI app
+                (Bank Transfer / Pay to Account Number).
               </p>
 
-              {/* QR Code */}
-              <div className="flex flex-col items-center bg-white border border-blue-100 rounded-xl p-4 mb-4">
-                <QRCode value={UPI_QR} size={180} />
-                <p className="text-xs text-gray-400 mt-3">Scan with any UPI app</p>
+              {/* Account details rows */}
+              <div className="bg-white border border-blue-100 rounded-xl divide-y divide-gray-100 overflow-hidden">
+                <AccountRow label="Account Holder" value={ACCOUNT_NAME} />
+                <AccountRow label="Account Number" value={ACCOUNT_NO} copyable />
+                <AccountRow label="Bank"           value={BANK_NAME} />
+                <AccountRow label="IFSC Code"      value={IFSC} copyable />
+                <AccountRow label="Branch"         value={BRANCH} />
               </div>
 
-              {/* UPI ID fallback */}
-              <p className="text-xs text-gray-500 mb-2">Or pay manually using UPI ID:</p>
-              <div className="bg-white border border-blue-200 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-[10px] text-gray-400 mb-0.5 uppercase tracking-wide">UPI ID</p>
-                  <p className="text-sm font-bold text-gray-800 tracking-wide">{UPI_ID}</p>
-                </div>
-                <CopyButton text={UPI_ID} />
+              {/* How to pay steps */}
+              <div className="bg-yellow-50 border border-yellow-100 rounded-xl p-3">
+                <p className="text-xs font-semibold text-yellow-800 mb-1.5">How to pay via PhonePe / GPay:</p>
+                <ol className="text-xs text-yellow-700 space-y-1 list-decimal list-inside">
+                  <li>Open PhonePe or GPay</li>
+                  <li>Tap <strong>Bank Transfer</strong> or <strong>Pay to Account</strong></li>
+                  <li>Enter Account Number and IFSC above</li>
+                  <li>Enter amount <strong>₹{AMOUNT}</strong> and pay</li>
+                  <li>Note the <strong>Transaction / UTR ID</strong> from the receipt</li>
+                  <li>Enter it below and submit this form</li>
+                </ol>
               </div>
             </div>
 
             {/* Transaction ID */}
-            <F label="Transaction ID / UTR Number" error={errors.transactionId}>
+            <F label="Transaction / UTR Number" error={errors.transactionId}>
               <input type="text" name="transactionId" value={form.transactionId}
                 onChange={handleChange}
-                placeholder="e.g. T2024031512345678 or UTR number"
+                placeholder="e.g. 425318765432 or UTR number"
                 className={`field-input ${errors.transactionId ? 'field-input-error' : ''}`} />
               <p className="text-xs text-gray-400 mt-1">
-                Enter the transaction ID shown in your PhonePe app after payment.
+                Enter the Transaction ID or UTR number from your payment receipt.
               </p>
             </F>
           </div>
@@ -333,6 +339,18 @@ function F({ label, required, error, children, className = '' }) {
       </label>
       {children}
       {error && <p className="field-error">{error}</p>}
+    </div>
+  );
+}
+
+function AccountRow({ label, value, copyable }) {
+  return (
+    <div className="flex items-center justify-between px-4 py-2.5 gap-3">
+      <div className="min-w-0">
+        <p className="text-[10px] text-gray-400 uppercase tracking-wide">{label}</p>
+        <p className="text-sm font-semibold text-gray-800 break-all">{value}</p>
+      </div>
+      {copyable && <CopyButton text={value} />}
     </div>
   );
 }
