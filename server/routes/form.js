@@ -26,9 +26,9 @@ const formValidation = [
     .isIn(['Married', 'Unmarried'])
     .withMessage('Invalid marital status'),
 
-  body('designation').optional().trim().isLength({ max: 100 }).escape(),
-  body('division').optional().trim().isLength({ max: 100 }).escape(),
-  body('circle').optional().trim().isLength({ max: 100 }).escape(),
+  body('designation').trim().notEmpty().withMessage('Designation is required').isLength({ max: 100 }).escape(),
+  body('division').trim().notEmpty().withMessage('Division is required').isLength({ max: 100 }).escape(),
+  body('circle').trim().notEmpty().withMessage('Circle is required').isLength({ max: 100 }).escape(),
 
   body('educationQualifications')
     .trim().notEmpty().withMessage('Education qualifications are required')

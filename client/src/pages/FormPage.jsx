@@ -59,6 +59,9 @@ export default function FormPage() {
     if (!form.mobile.trim())                  e.mobile = 'Required';
     else if (!/^[6-9]\d{9}$/.test(form.mobile.trim())) e.mobile = 'Enter a valid 10-digit mobile number';
     if (!form.maritalStatus)                  e.maritalStatus = 'Required';
+    if (!form.designation.trim())             e.designation = 'Required';
+    if (!form.division.trim())                e.division = 'Required';
+    if (!form.circle.trim())                  e.circle = 'Required';
     if (!form.educationQualifications.trim()) e.educationQualifications = 'Required';
     return e;
   };
@@ -171,17 +174,20 @@ export default function FormPage() {
           {/* Working Place */}
           <SectionHeader icon="🏢" title="Working Place" />
           <div className="px-3 md:px-6 py-3 md:py-5 grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-5">
-            <F label="Designation">
+            <F label="Designation" required error={errors.designation}>
               <input type="text" name="designation" value={form.designation} onChange={handleChange}
-                placeholder="e.g., Deputy Commissioner" className="field-input" />
+                placeholder="e.g., Deputy Commissioner"
+                className={`field-input ${errors.designation ? 'field-input-error' : ''}`} />
             </F>
-            <F label="Division">
+            <F label="Division" required error={errors.division}>
               <input type="text" name="division" value={form.division} onChange={handleChange}
-                placeholder="Division name" className="field-input" />
+                placeholder="Division name"
+                className={`field-input ${errors.division ? 'field-input-error' : ''}`} />
             </F>
-            <F label="Circle">
+            <F label="Circle" required error={errors.circle}>
               <input type="text" name="circle" value={form.circle} onChange={handleChange}
-                placeholder="Circle name" className="field-input" />
+                placeholder="Circle name"
+                className={`field-input ${errors.circle ? 'field-input-error' : ''}`} />
             </F>
           </div>
 
