@@ -7,6 +7,9 @@ const DEFAULT_EXPECTED = parseInt(process.env.EXPECTED_AMOUNT || '1', 10);
 // Account number to verify in screenshot
 const ACCOUNT_NO = process.env.ACCOUNT_NO || '081710100101759';
 
+// UPI ID to verify in screenshot (PhonePe/GPay show UPI ID, not bank account)
+const UPI_ID = process.env.UPI_ID || 'aguru79621@ybl';
+
 /**
  * Checks whether OCR text contains the bank account number.
  * Handles masked formats like XX1759, ****101759, etc.
@@ -14,16 +17,22 @@ const ACCOUNT_NO = process.env.ACCOUNT_NO || '081710100101759';
 function checkAccountInText(text) {
   if (!text) return false;
   const normalized = text.replace(/[\s\-\.]/g, '');
-  const last4  = ACCOUNT_NO.slice(-4);   // 1759
-  const last6  = ACCOUNT_NO.slice(-6);   // 101759
-  // Full match
+  const last4  = ACCOUNT_NO.slice(-4);
+  const last6  = ACCOUNT_NO.slice(-6);
   if (normalized.includes(ACCOUNT_NO)) return true;
-  // Masked format: XX1759 / ****1759 / x...x1759
   if (new RegExp(`[Xx*]{1,}${last6}`).test(text)) return true;
   if (new RegExp(`[Xx*]{1,}${last4}`).test(text)) return true;
-  // Some apps show only last 4 digits on success screen
   if (new RegExp(`\\b${last4}\\b`).test(text)) return true;
   return false;
+}
+
+/**
+ * Checks whether OCR text contains the UPI ID.
+ * PhonePe/GPay screenshots show UPI ID instead of bank account number.
+ */
+function checkUpiInText(text) {
+  if (!text) return false;
+  return text.toLowerCase().includes(UPI_ID.toLowerCase());
 }
 
 /**
@@ -162,22 +171,22 @@ function parseNum(str) {
 /**
  * Determines payment status from screenshot OCR.
  * Rules:
- *   - No screenshot                          → Unpaid
- *   - Screenshot + account found + amount OK → Paid
- *   - Screenshot + amount OK (no account)    → Pending  (UPI screenshots don't show bank account)
- *   - Screenshot but amount wrong / missing  → Unpaid
+ *   - No screenshot                                       → Unpaid
+ *   - Screenshot + (account OR UPI ID found) + amount OK → Paid
+ *   - Screenshot but recipient not found or wrong amount  → Unpaid
  *
  * @param {string|null} screenshotPath
  * @param {number|null} amount         - extracted by OCR
  * @param {number}      expectedAmount - from DB settings
- * @param {string}      ocrText        - full OCR text for account check
+ * @param {string}      ocrText        - full OCR text for account/UPI check
  */
 function determinePaymentStatus(screenshotPath, amount, expectedAmount = DEFAULT_EXPECTED, ocrText = '') {
-  if (!screenshotPath)                          return { status: 'Unpaid',  amount: null };
-  const accountFound = checkAccountInText(ocrText);
-  const amountOk     = amount !== null && amount >= expectedAmount;
-  if (amountOk)                                 return { status: 'Paid',   amount };
-  return                                               { status: 'Unpaid', amount };
+  if (!screenshotPath)  return { status: 'Unpaid', amount: null };
+  const recipientFound = checkAccountInText(ocrText) || checkUpiInText(ocrText);
+  const amountOk       = amount !== null && amount >= expectedAmount;
+  console.log(`[OCR] recipientFound=${recipientFound} amountOk=${amountOk} amount=${amount} expected=${expectedAmount}`);
+  if (recipientFound && amountOk) return { status: 'Paid',   amount };
+  return                                 { status: 'Unpaid', amount };
 }
 
 module.exports = { extractTextFromImage, determinePaymentStatus, extractPaymentAmount };
