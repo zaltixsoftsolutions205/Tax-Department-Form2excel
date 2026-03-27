@@ -74,10 +74,9 @@ export default function FormPage() {
       });
       setSubmitted(true);
       setServerMsg(
-        data.paymentStatus === 'Paid'               ? `Thank you! Payment of ₹${data.extractedAmount} verified.` :
-        data.paymentStatus === 'Pending'            ? `Amount ₹${data.extractedAmount} is less than required.` :
-        data.paymentStatus === 'Invalid Screenshot' ? 'Could not read payment amount from screenshot.' :
-                                                      'No payment screenshot uploaded.'
+        data.paymentStatus === 'Paid'
+          ? 'Thank you! Your payment has been recorded. Welcome to the Association.'
+          : 'Form submitted. Please complete the payment to activate your membership.'
       );
     } catch (err) {
       setServerMsg(err.response?.data?.message || 'Submission failed. Please try again.');

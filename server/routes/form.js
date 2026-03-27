@@ -86,40 +86,29 @@ router.post(
         name, parentsName, religion, caste, maritalStatus,
         designation, division, circle,
         educationQualifications, residenceAddress, interests,
-        transactionId, paymentAttempted,
+        transactionId,
       } = req.body;
 
-      const attempted = paymentAttempted === 'true' || paymentAttempted === true;
-      const txnId     = transactionId?.trim() || null;
+      const txnId = transactionId?.trim() || null;
 
       // ── Payment status logic ──────────────────────────────────────────────
-      // Priority: transactionId > screenshot OCR > paymentAttempted flag
+      // Transaction ID provided → Paid, otherwise → Unpaid
       let paymentStatus   = 'Unpaid';
       let extractedAmount = null;
       let ocrText         = null;
       let screenshotRelPath = null;
 
       if (txnId) {
-        // User provided a transaction ID → needs manual verification
-        paymentStatus = 'Paid (Verification Required)';
-      } else if (req.file) {
-        // Screenshot uploaded → run OCR
+        paymentStatus = 'Paid';
+      }
+
+      // Store screenshot if uploaded (for admin reference)
+      if (req.file) {
         screenshotRelPath = path.relative(
           path.join(__dirname, '..'),
           req.file.path
         ).replace(/\\/g, '/');
-
-        const expectedAmount = await getExpectedAmount();
-        const { text, amount } = await extractTextFromImage(req.file.path);
-        ocrText = text || null;
-        const result = determinePaymentStatus(req.file.path, amount, expectedAmount);
-        paymentStatus   = result.status;
-        extractedAmount = result.amount;
-      } else if (attempted) {
-        // User clicked Pay but gave no proof
-        paymentStatus = 'Pending';
       }
-      // else → remains 'Unpaid'
 
       const submission = new Submission({
         name,
@@ -138,7 +127,6 @@ router.post(
         paymentStatus,
         ocrText,
         transactionId:           txnId,
-        paymentAttempted:        attempted,
       });
 
       await submission.save();
