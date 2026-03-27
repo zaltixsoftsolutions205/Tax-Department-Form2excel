@@ -2,16 +2,7 @@ import { useState, useRef, useCallback } from 'react';
 import api from '../api';
 
 const AMOUNT  = 1;
-
-const BANK = {
-  holder:  'RANGANNAGARI GURUASHOK',
-  account: '081710100101759',
-  ifsc:    'UBIN0808172',
-  bank:    'Union Bank of India',
-};
-
-// UPI deep link using Union Bank's account@ubin VPA format
-const UPI_LINK = `upi://pay?pa=${BANK.account}@ubin&pn=${encodeURIComponent(BANK.holder)}&am=${AMOUNT}&cu=INR&tn=${encodeURIComponent('TCTS Membership Fee')}`;
+const UPI_LINK = `upi://pay?pa=9398654692@ybl&pn=${encodeURIComponent('TCTS Association')}&am=${AMOUNT}&cu=INR&tn=${encodeURIComponent('TCTS Membership Fee')}`;
 
 const INITIAL = {
   name: '', parentsName: '', religion: '', caste: '',
@@ -212,20 +203,18 @@ export default function FormPage() {
           <SectionHeader icon="💳" title="Payment" />
           <div className="px-3 md:px-6 py-3 md:py-5 space-y-4">
 
-            {/* Pay Now Button */}
+            {/* Pay Now */}
             <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
               <div className="flex items-center justify-between mb-3">
                 <p className="text-sm font-semibold text-gray-800">Membership Fee <span className="text-red-500">*</span></p>
                 <p className="text-xl font-bold text-blue-700">₹{AMOUNT}</p>
               </div>
               <p className="text-xs text-gray-500 mb-3">
-                Tap <strong>Pay Now</strong> to open your UPI app (PhonePe / GPay) with the amount pre-filled. After payment, enter the Transaction ID below.
+                Tap <strong>Pay Now</strong> to open PhonePe / GPay with the amount pre-filled. After payment, enter your Transaction ID below.
               </p>
-
-              {/* UPI Pay Button */}
               <a
                 href={UPI_LINK}
-                className="flex items-center justify-center gap-2 w-full bg-blue-700 hover:bg-blue-800 active:bg-blue-900 text-white font-semibold py-3 rounded-xl text-sm transition-colors mb-4"
+                className="flex items-center justify-center gap-2 w-full bg-blue-700 hover:bg-blue-800 active:bg-blue-900 text-white font-semibold py-3 rounded-xl text-sm transition-colors"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -233,25 +222,6 @@ export default function FormPage() {
                 </svg>
                 Pay ₹{AMOUNT} Now
               </a>
-
-              {/* Divider */}
-              <div className="flex items-center gap-2 mb-3">
-                <div className="flex-1 border-t border-gray-200" />
-                <span className="text-xs text-gray-400">or pay manually via bank transfer</span>
-                <div className="flex-1 border-t border-gray-200" />
-              </div>
-
-              {/* Bank Details */}
-              <div className="bg-white rounded-lg border border-blue-100 divide-y divide-gray-100">
-                <BankRow label="Account Holder" value={BANK.holder} />
-                <BankRow label="Account Number" value={BANK.account} copy />
-                <BankRow label="IFSC Code"      value={BANK.ifsc}    copy />
-                <BankRow label="Bank"           value={BANK.bank} />
-              </div>
-
-              {errors.payment && (
-                <p className="text-xs text-red-600 font-medium mt-1">⚠ {errors.payment}</p>
-              )}
             </div>
 
             {/* Transaction ID */}
@@ -350,27 +320,6 @@ function F({ label, required, error, children, className = '' }) {
   );
 }
 
-
-function BankRow({ label, value, copy }) {
-  const [copied, setCopied] = useState(false);
-  const handleCopy = () => {
-    navigator.clipboard?.writeText(value);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  };
-  return (
-    <div className="flex items-center justify-between px-3 py-2 gap-2">
-      <span className="text-xs text-gray-400 w-28 flex-shrink-0">{label}</span>
-      <span className="text-xs font-semibold text-gray-800 flex-1">{value}</span>
-      {copy && (
-        <button type="button" onClick={handleCopy}
-          className="ml-1 text-[10px] bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-0.5 rounded flex-shrink-0">
-          {copied ? '✓' : 'Copy'}
-        </button>
-      )}
-    </div>
-  );
-}
 
 function Spin() {
   return (
