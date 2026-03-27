@@ -1,18 +1,17 @@
 import { useState, useRef, useCallback } from 'react';
 import api from '../api';
 
-const AMOUNT       = 500;
 const ACCOUNT_NAME = 'Rangannagari Guruashok';
 const ACCOUNT_NO   = '081710100101759';
 const BANK_NAME    = 'Union Bank of India';
 const IFSC         = 'UBIN080817';
 const BRANCH       = 'Kalakada';
+const AMOUNT       = 500;
 
 const INITIAL = {
   name: '', parentsName: '', religion: '', caste: '',
   maritalStatus: '', designation: '', division: '', circle: '',
   educationQualifications: '', residenceAddress: '', interests: '',
-  transactionId: '',
 };
 
 export default function FormPage() {
@@ -23,8 +22,6 @@ export default function FormPage() {
   const [submitting,       setSubmitting]       = useState(false);
   const [submitted,        setSubmitted]        = useState(false);
   const [serverMsg,        setServerMsg]        = useState('');
-  const [paymentAttempted, setPaymentAttempted] = useState(false);
-  const [showPayModal,     setShowPayModal]     = useState(false);
   const fileRef = useRef(null);
 
   const handleChange = useCallback((e) => {
@@ -73,7 +70,6 @@ export default function FormPage() {
     setSubmitting(true); setServerMsg('');
     const fd = new FormData();
     Object.entries(form).forEach(([k, v]) => fd.append(k, v));
-    fd.append('paymentAttempted', paymentAttempted);
     if (file) fd.append('paymentScreenshot', file);
     try {
       const { data } = await api.post('/api/submit-form', fd, {
@@ -81,11 +77,9 @@ export default function FormPage() {
       });
       setSubmitted(true);
       setServerMsg(
-        data.paymentStatus === 'Paid (Verification Required)'
-          ? 'Form submitted! Your payment will be verified by the admin shortly.'
-          : data.paymentStatus === 'Pending'
-          ? 'Form submitted. Admin will verify your payment status.'
-          : 'Form submitted. Please complete the payment to activate your membership.'
+        data.paymentStatus === 'Paid'
+          ? 'Form submitted! Payment verified successfully. Welcome to the association!'
+          : 'Form submitted. Please ensure you have paid ₹500 to the bank account. Admin will verify and update your status.'
       );
     } catch (err) {
       setServerMsg(err.response?.data?.message || 'Submission failed. Please try again.');
@@ -104,7 +98,7 @@ export default function FormPage() {
           </div>
           <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">Submitted Successfully!</h2>
           <p className="text-gray-600 mb-6 text-sm leading-relaxed">{serverMsg}</p>
-          <button onClick={() => { setSubmitted(false); setForm(INITIAL); setFile(null); setPreview(null); setPaymentAttempted(false); }}
+          <button onClick={() => { setSubmitted(false); setForm(INITIAL); setFile(null); setPreview(null); }}
             className="btn-primary w-full">Submit Another Response</button>
         </div>
       </div>
@@ -211,116 +205,61 @@ export default function FormPage() {
           <SectionHeader icon="💳" title="Payment" />
           <div className="px-3 md:px-6 py-3 md:py-5 space-y-4">
 
-            {/* Pay Button */}
-            <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-gray-800">Membership Fee</p>
-                <p className="text-xs text-gray-500 mt-0.5">Tap to view payment details</p>
+            {/* Bank account details */}
+            <div className="bg-blue-50 border border-blue-100 rounded-xl overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-blue-100">
+                <p className="text-sm font-semibold text-gray-800">Pay Membership Fee</p>
+                <p className="text-xl font-bold text-blue-700">₹{AMOUNT}</p>
               </div>
-              <button
-                type="button"
-                onClick={() => { setShowPayModal(true); setPaymentAttempted(true); }}
-                className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-bold py-3 px-6 rounded-xl text-base transition-colors shadow-sm"
-              >
-                Pay ₹{AMOUNT}
-              </button>
+              <div className="divide-y divide-blue-100">
+                <AccountRow label="Account Holder" value={ACCOUNT_NAME} />
+                <AccountRow label="Account Number" value={ACCOUNT_NO} copyable />
+                <AccountRow label="Bank"           value={BANK_NAME} />
+                <AccountRow label="IFSC Code"      value={IFSC} copyable />
+                <AccountRow label="Branch"         value={BRANCH} />
+              </div>
+              <div className="px-4 py-2.5 bg-blue-100/50">
+                <p className="text-xs text-blue-700">
+                  Open PhonePe / GPay → <strong>Bank Transfer</strong> → enter above details → pay <strong>₹{AMOUNT}</strong>
+                </p>
+              </div>
             </div>
 
-            {/* Payment Modal */}
-            {showPayModal && (
-              <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/50"
-                onClick={() => setShowPayModal(false)}>
-                <div className="bg-white w-full md:max-w-sm rounded-t-2xl md:rounded-2xl shadow-2xl overflow-hidden"
-                  onClick={e => e.stopPropagation()}>
-
-                  {/* Modal Header */}
-                  <div className="bg-gradient-to-r from-blue-900 to-blue-700 px-5 py-4 flex items-center justify-between">
-                    <div>
-                      <p className="text-white font-bold text-base">Pay Membership Fee</p>
-                      <p className="text-blue-200 text-xs mt-0.5">Transfer to bank account below</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-white font-bold text-2xl">₹{AMOUNT}</p>
-                    </div>
-                  </div>
-
-                  {/* Account Details */}
-                  <div className="divide-y divide-gray-100">
-                    <AccountRow label="Account Holder" value={ACCOUNT_NAME} />
-                    <AccountRow label="Account Number" value={ACCOUNT_NO} copyable />
-                    <AccountRow label="Bank Name"      value={BANK_NAME} />
-                    <AccountRow label="IFSC Code"      value={IFSC} copyable />
-                    <AccountRow label="Branch"         value={BRANCH} />
-                    <AccountRow label="Amount"         value={`₹${AMOUNT}`} copyable copyValue={String(AMOUNT)} />
-                  </div>
-
-                  {/* Steps */}
-                  <div className="px-4 py-3 bg-yellow-50 border-t border-yellow-100">
-                    <p className="text-xs font-semibold text-yellow-800 mb-1">Steps to pay:</p>
-                    <ol className="text-xs text-yellow-700 space-y-0.5 list-decimal list-inside">
-                      <li>Open PhonePe / GPay / Paytm</li>
-                      <li>Tap <strong>Bank Transfer</strong> or <strong>Pay to Account</strong></li>
-                      <li>Enter Account Number + IFSC (tap Copy above)</li>
-                      <li>Enter ₹{AMOUNT} and confirm payment</li>
-                      <li>Note your <strong>Transaction / UTR ID</strong></li>
-                    </ol>
-                  </div>
-
-                  {/* Done button */}
-                  <div className="px-4 py-3 border-t border-gray-100">
-                    <button type="button" onClick={() => setShowPayModal(false)}
-                      className="w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold py-3 rounded-xl text-sm">
-                      Done — Enter Transaction ID below
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Transaction ID */}
-            <F label="Transaction / UTR Number" error={errors.transactionId}>
-              <input type="text" name="transactionId" value={form.transactionId}
-                onChange={handleChange}
-                placeholder="e.g. 425318765432 or UTR number"
-                className={`field-input ${errors.transactionId ? 'field-input-error' : ''}`} />
-              <p className="text-xs text-gray-400 mt-1">
-                Enter the Transaction ID or UTR number from your payment receipt.
+            {/* Screenshot upload — required for auto status */}
+            <div>
+              <p className="text-sm font-semibold text-gray-700 mb-1">
+                Payment Screenshot <span className="text-red-500">*</span>
               </p>
-            </F>
-          </div>
-
-          {/* Payment Screenshot */}
-          <SectionHeader icon="🖼️" title="Payment Screenshot (Optional)" />
-          <div className="px-3 md:px-6 py-3 md:py-5">
-            <p className="text-xs md:text-sm text-gray-500 mb-3">
-              Upload your payment screenshot for faster verification (JPEG / PNG, max 2 MB).
-            </p>
-            {!preview ? (
-              <label htmlFor="fileInput"
-                className="flex flex-col items-center justify-center w-full h-28 md:h-36 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-blue-400 hover:bg-blue-50 transition-colors">
-                <svg className="w-8 h-8 md:w-10 md:h-10 text-gray-400 mb-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-                <span className="text-sm text-gray-500 font-medium">Tap to upload screenshot</span>
-                <span className="text-xs text-gray-400 mt-1">JPEG or PNG · max 2 MB</span>
-                <input id="fileInput" ref={fileRef} type="file" accept="image/jpeg,image/jpg,image/png"
-                  className="hidden" onChange={handleFile} />
-              </label>
-            ) : (
-              <div className="relative inline-block max-w-full">
-                <img src={preview} alt="preview"
-                  className="max-h-44 md:max-h-52 w-auto rounded-xl border border-gray-200 shadow-sm object-contain" />
-                <button type="button" onClick={removeFile}
-                  className="absolute -top-2 -right-2 w-6 h-6 md:w-7 md:h-7 bg-red-600 text-white rounded-full flex items-center justify-center shadow hover:bg-red-700">
-                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+              <p className="text-xs text-gray-500 mb-3">
+                After paying, take a screenshot and upload it here. The system will automatically verify your payment.
+              </p>
+              {!preview ? (
+                <label htmlFor="fileInput"
+                  className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-blue-300 rounded-xl cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors bg-blue-50/30">
+                  <svg className="w-10 h-10 text-blue-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
-                </button>
-                <p className="text-xs text-gray-500 mt-2 truncate max-w-[180px]">{file?.name}</p>
-              </div>
-            )}
-            {errors.file && <p className="field-error mt-2">{errors.file}</p>}
+                  <span className="text-sm font-semibold text-blue-600">Tap to upload payment screenshot</span>
+                  <span className="text-xs text-gray-400 mt-1">JPEG or PNG · max 2 MB</span>
+                  <input id="fileInput" ref={fileRef} type="file" accept="image/jpeg,image/jpg,image/png"
+                    className="hidden" onChange={handleFile} />
+                </label>
+              ) : (
+                <div className="relative inline-block max-w-full">
+                  <img src={preview} alt="preview"
+                    className="max-h-52 w-auto rounded-xl border-2 border-green-300 shadow-sm object-contain" />
+                  <button type="button" onClick={removeFile}
+                    className="absolute -top-2 -right-2 w-7 h-7 bg-red-600 text-white rounded-full flex items-center justify-center shadow hover:bg-red-700">
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                  <p className="text-xs text-green-600 font-medium mt-2">✓ Screenshot uploaded</p>
+                </div>
+              )}
+              {errors.file && <p className="field-error mt-2">{errors.file}</p>}
+            </div>
           </div>
 
           {serverMsg && !submitted && (

@@ -6,6 +6,8 @@ const { body, validationResult } = require('express-validator');
 
 const upload       = require('../middleware/upload');
 const Submission   = require('../models/Submission');
+const { extractTextFromImage, determinePaymentStatus } = require('../utils/ocr');
+const { getExpectedAmount } = require('../models/Settings');
 
 // ── Validation rules ──────────────────────────────────────────────────────────
 const formValidation = [
@@ -84,30 +86,28 @@ router.post(
         name, parentsName, religion, caste, maritalStatus,
         designation, division, circle,
         educationQualifications, residenceAddress, interests,
-        transactionId,
       } = req.body;
 
-      const txnId    = transactionId?.trim() || null;
-      const attempted = req.body.paymentAttempted === 'true' || req.body.paymentAttempted === true;
-
-      // ── Payment status logic ──────────────────────────────────────────────
-      // transactionId provided → needs admin verification
-      // paymentAttempted but no txnId → Pending (paid but didn't enter ID yet)
-      // neither → Unpaid
+      // ── Payment status via OCR ────────────────────────────────────────────
+      // Upload screenshot → OCR reads it → finds account no. + amount → Paid
+      // No screenshot or details not found → Unpaid
       let paymentStatus     = 'Unpaid';
       let screenshotRelPath = null;
-
-      if (txnId) {
-        paymentStatus = 'Paid (Verification Required)';
-      } else if (attempted) {
-        paymentStatus = 'Pending';
-      }
+      let extractedAmount   = null;
+      let ocrText           = '';
 
       if (req.file) {
         screenshotRelPath = path.relative(
           path.join(__dirname, '..'),
           req.file.path
         ).replace(/\\/g, '/');
+
+        const { text, amount } = await extractTextFromImage(req.file.path);
+        ocrText         = text;
+        const expected  = await getExpectedAmount();
+        const result    = determinePaymentStatus(screenshotRelPath, amount, expected, text);
+        paymentStatus   = result.status;
+        extractedAmount = result.amount;
       }
 
       const submission = new Submission({
@@ -124,8 +124,8 @@ router.post(
         interests:               interests              || '',
         paymentScreenshot:       screenshotRelPath,
         paymentStatus,
-        transactionId:           txnId,
-        paymentAttempted:        attempted,
+        extractedAmount,
+        ocrText,
       });
 
       await submission.save();

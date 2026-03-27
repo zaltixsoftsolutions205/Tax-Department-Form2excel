@@ -4,6 +4,28 @@ const { createWorker } = require('tesseract.js');
 // Fallback used only in standalone tests
 const DEFAULT_EXPECTED = parseInt(process.env.EXPECTED_AMOUNT || '500', 10);
 
+// Account number to verify in screenshot
+const ACCOUNT_NO = process.env.ACCOUNT_NO || '081710100101759';
+
+/**
+ * Checks whether OCR text contains the bank account number.
+ * Handles masked formats like XX1759, ****101759, etc.
+ */
+function checkAccountInText(text) {
+  if (!text) return false;
+  const normalized = text.replace(/[\s\-\.]/g, '');
+  const last4  = ACCOUNT_NO.slice(-4);   // 1759
+  const last6  = ACCOUNT_NO.slice(-6);   // 101759
+  // Full match
+  if (normalized.includes(ACCOUNT_NO)) return true;
+  // Masked format: XX1759 / ****1759 / x...x1759
+  if (new RegExp(`[Xx*]{1,}${last6}`).test(text)) return true;
+  if (new RegExp(`[Xx*]{1,}${last4}`).test(text)) return true;
+  // Some apps show only last 4 digits on success screen
+  if (new RegExp(`\\b${last4}\\b`).test(text)) return true;
+  return false;
+}
+
 /**
  * Runs Tesseract OCR on a local image file.
  * Returns { text: string, amount: number|null }
@@ -138,16 +160,23 @@ function parseNum(str) {
 }
 
 /**
- * Determines payment status based on upload presence and OCR result.
+ * Determines payment status from screenshot OCR.
+ * Rules:
+ *   - No screenshot                          → Unpaid
+ *   - Screenshot + account found + amount OK → Paid
+ *   - Anything else                          → Unpaid
+ *
  * @param {string|null} screenshotPath
- * @param {number|null} amount
- * @param {number} expectedAmount - pass the DB-configured value
+ * @param {number|null} amount         - extracted by OCR
+ * @param {number}      expectedAmount - from DB settings
+ * @param {string}      ocrText        - full OCR text for account check
  */
-function determinePaymentStatus(screenshotPath, amount, expectedAmount = DEFAULT_EXPECTED) {
-  if (!screenshotPath) return { status: 'Unpaid',              amount: null };
-  if (amount === null) return { status: 'Invalid Screenshot',  amount: null };
-  if (amount < expectedAmount) return { status: 'Pending',    amount };
-  return { status: 'Paid', amount };
+function determinePaymentStatus(screenshotPath, amount, expectedAmount = DEFAULT_EXPECTED, ocrText = '') {
+  if (!screenshotPath)                          return { status: 'Unpaid', amount: null };
+  const accountFound = checkAccountInText(ocrText);
+  const amountOk     = amount !== null && amount >= expectedAmount;
+  if (accountFound && amountOk)                 return { status: 'Paid',   amount };
+  return                                               { status: 'Unpaid', amount };
 }
 
 module.exports = { extractTextFromImage, determinePaymentStatus, extractPaymentAmount };
