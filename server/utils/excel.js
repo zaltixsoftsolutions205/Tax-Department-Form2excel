@@ -6,10 +6,11 @@ const ROW_ODD   = 'FFFFFF';
 const ROW_EVEN  = 'EFF6FF';
 
 const STATUS_COLORS = {
-  Paid:                { bg: '27AE60', fg: 'FFFFFF' },
-  Pending:             { bg: 'F39C12', fg: 'FFFFFF' },
-  Unpaid:              { bg: 'E74C3C', fg: 'FFFFFF' },
-  'Invalid Screenshot':{ bg: '95A5A6', fg: 'FFFFFF' },
+  'Paid':                         { bg: '27AE60', fg: 'FFFFFF' },
+  'Paid (Verification Required)': { bg: '2980B9', fg: 'FFFFFF' },
+  'Pending':                      { bg: 'F39C12', fg: 'FFFFFF' },
+  'Unpaid':                       { bg: 'E74C3C', fg: 'FFFFFF' },
+  'Invalid Screenshot':           { bg: '95A5A6', fg: 'FFFFFF' },
 };
 
 function borderAll(cell) {
@@ -33,7 +34,7 @@ async function generateExcel(submissions) {
   });
 
   // Title row (row 1)
-  ws.mergeCells('A1:O1');
+  ws.mergeCells('A1:P1');
   const titleCell = ws.getCell('A1');
   titleCell.value =
     'TELANGANA COMMERCIAL TAXES S.C./S.T. EMPLOYEES ASSOCIATION – Submissions';
@@ -56,8 +57,9 @@ async function generateExcel(submissions) {
     { key: 'educationQualifications',width: 26 },
     { key: 'residenceAddress',       width: 32 },
     { key: 'interests',              width: 26 },
+    { key: 'transactionId',          width: 26 },
     { key: 'extractedAmount',        width: 20 },
-    { key: 'paymentStatus',          width: 18 },
+    { key: 'paymentStatus',          width: 26 },
     { key: 'submittedAt',            width: 22 },
   ];
 
@@ -65,7 +67,7 @@ async function generateExcel(submissions) {
     'S.No', 'Name', "Parent's Name", 'Religion', 'Caste', 'Marital Status',
     'Designation', 'Division', 'Circle', 'Education Qualifications',
     'Residence Address', 'Interests / Hobbies',
-    'Extracted Amount (₹)', 'Payment Status', 'Submitted At',
+    'Transaction ID / UTR', 'Extracted Amount (₹)', 'Payment Status', 'Submitted At',
   ];
 
   // Header row (row 2)
@@ -93,7 +95,8 @@ async function generateExcel(submissions) {
       circle:                 sub.circle      || '—',
       educationQualifications:sub.educationQualifications,
       residenceAddress:       sub.residenceAddress,
-      interests:              sub.interests   || '—',
+      interests:              sub.interests       || '—',
+      transactionId:          sub.transactionId   || '—',
       extractedAmount:        sub.extractedAmount != null ? sub.extractedAmount : 'N/A',
       paymentStatus:          sub.paymentStatus,
       submittedAt:            new Date(sub.submittedAt).toLocaleString('en-IN', {

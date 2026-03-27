@@ -5,13 +5,14 @@ import api from '../api';
 const API_BASE = import.meta.env.VITE_API_URL || '';
 const imgUrl   = (p) => `${API_BASE}/${p}`;
 
-const STATUSES = ['All', 'Paid', 'Pending', 'Unpaid', 'Invalid Screenshot'];
+const STATUSES = ['All', 'Paid', 'Paid (Verification Required)', 'Pending', 'Unpaid', 'Invalid Screenshot'];
 
 const STATUS_STYLES = {
-  'Paid':               'bg-green-100 text-green-800 border border-green-200',
-  'Pending':            'bg-yellow-100 text-yellow-800 border border-yellow-200',
-  'Unpaid':             'bg-red-100 text-red-800 border border-red-200',
-  'Invalid Screenshot': 'bg-gray-100 text-gray-700 border border-gray-200',
+  'Paid':                         'bg-green-100 text-green-800 border border-green-200',
+  'Paid (Verification Required)': 'bg-blue-100 text-blue-800 border border-blue-200',
+  'Pending':                      'bg-yellow-100 text-yellow-800 border border-yellow-200',
+  'Unpaid':                       'bg-red-100 text-red-800 border border-red-200',
+  'Invalid Screenshot':           'bg-gray-100 text-gray-700 border border-gray-200',
 };
 
 const fmtDate = (iso) => new Date(iso).toLocaleString('en-IN', {
@@ -81,7 +82,7 @@ function ExpectedAmountSetting() {
 
 // ── Stat Card ─────────────────────────────────────────────────────────────────
 function StatCard({ label, value, color }) {
-  const bg = { blue:'bg-blue-600', green:'bg-green-600', yellow:'bg-yellow-500', red:'bg-red-600', gray:'bg-gray-500' };
+  const bg = { blue:'bg-blue-600', green:'bg-green-600', yellow:'bg-yellow-500', red:'bg-red-600', gray:'bg-gray-500', indigo:'bg-indigo-600' };
   return (
     <div className={`${bg[color]} rounded-lg md:rounded-xl py-2 px-1 md:p-3 flex flex-col items-center justify-center text-center`}>
       <p className="text-white font-bold text-base md:text-2xl leading-none">{value}</p>
@@ -140,7 +141,7 @@ function StatusDropdown({ currentStatus, submissionId, onUpdated }) {
       </button>
       {open && (
         <div className="absolute z-30 mt-1 right-0 bg-white border border-gray-200 rounded-lg shadow-lg min-w-max overflow-hidden">
-          {['Paid','Pending','Unpaid','Invalid Screenshot'].map(s => (
+          {['Paid','Paid (Verification Required)','Pending','Unpaid','Invalid Screenshot'].map(s => (
             <button key={s} onClick={() => update(s)}
               className={`block w-full text-left px-3 py-2 text-xs font-medium hover:bg-gray-50 transition-colors
                 ${s === currentStatus ? 'bg-blue-50 text-blue-700' : 'text-gray-700'}`}>
@@ -174,6 +175,9 @@ function MobileCard({ sub, idx, expanded, onToggle, onStatusUpdated, onViewImage
           Amount: <strong>{sub.extractedAmount != null ? `₹${sub.extractedAmount}` : '—'}</strong>
           {sub.manualOverride && <span className="text-purple-600 ml-1 text-[10px]">(edited)</span>}
         </span>
+        {sub.transactionId && (
+          <span className="text-xs text-gray-500 font-mono">Txn: {sub.transactionId}</span>
+        )}
         <div className="flex items-center gap-3">
           {sub.paymentScreenshot && (
             <button onClick={() => onViewImage(imgUrl(sub.paymentScreenshot))}
@@ -339,12 +343,13 @@ export default function AdminPage() {
 
         {/* Stats */}
         {stats && (
-          <div className="grid grid-cols-5 gap-1.5 md:gap-3">
-            <StatCard label="Total"   value={stats.total}   color="blue"   />
-            <StatCard label="Paid"    value={stats.paid}    color="green"  />
-            <StatCard label="Pending" value={stats.pending} color="yellow" />
-            <StatCard label="Unpaid"  value={stats.unpaid}  color="red"    />
-            <StatCard label="Invalid" value={stats.invalid} color="gray"   />
+          <div className="grid grid-cols-3 md:grid-cols-6 gap-1.5 md:gap-3">
+            <StatCard label="Total"    value={stats.total}      color="blue"   />
+            <StatCard label="Paid"     value={stats.paid}       color="green"  />
+            <StatCard label="Verify"   value={stats.paidVerify} color="indigo" />
+            <StatCard label="Pending"  value={stats.pending}    color="yellow" />
+            <StatCard label="Unpaid"   value={stats.unpaid}     color="red"    />
+            <StatCard label="Invalid"  value={stats.invalid}    color="gray"   />
           </div>
         )}
 
@@ -468,7 +473,7 @@ export default function AdminPage() {
                     <tr className="bg-gray-50 border-b border-gray-200 text-left">
                       {['#','Name',"Parent's Name",'Religion / Caste','Marital Status',
                         'Designation','Division / Circle','Education','Address',
-                        'Amount (₹)','Status','Screenshot','Date',''].map(h => (
+                        'Txn ID / UTR','Amount (₹)','Status','Screenshot','Date',''].map(h => (
                         <th key={h} className="px-3 py-2.5 text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">{h}</th>
                       ))}
                     </tr>
@@ -490,6 +495,9 @@ export default function AdminPage() {
                           </td>
                           <td className="px-3 py-2.5 text-gray-600 max-w-[130px] truncate">{sub.educationQualifications}</td>
                           <td className="px-3 py-2.5 text-gray-600 max-w-[150px] truncate">{sub.residenceAddress}</td>
+                          <td className="px-3 py-2.5 text-gray-600 whitespace-nowrap font-mono text-xs">
+                            {sub.transactionId || '—'}
+                          </td>
                           <td className="px-3 py-2.5 font-semibold text-gray-800 whitespace-nowrap">
                             {sub.extractedAmount != null ? `₹${sub.extractedAmount}` : '—'}
                           </td>

@@ -1,21 +1,32 @@
 import { useState, useRef, useCallback } from 'react';
 import api from '../api';
 
+// Set VITE_PHONEPE_LINK in Vercel env vars to your PhonePe/UPI payment link
+const PHONEPE_LINK = import.meta.env.VITE_PHONEPE_LINK || '#';
+const AMOUNT = 1000;
+
 const INITIAL = {
   name: '', parentsName: '', religion: '', caste: '',
   maritalStatus: '', designation: '', division: '', circle: '',
   educationQualifications: '', residenceAddress: '', interests: '',
+  transactionId: '',
 };
 
 export default function FormPage() {
-  const [form,       setForm]       = useState(INITIAL);
-  const [file,       setFile]       = useState(null);
-  const [preview,    setPreview]    = useState(null);
-  const [errors,     setErrors]     = useState({});
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted,  setSubmitted]  = useState(false);
-  const [serverMsg,  setServerMsg]  = useState('');
+  const [form,             setForm]             = useState(INITIAL);
+  const [file,             setFile]             = useState(null);
+  const [preview,          setPreview]          = useState(null);
+  const [errors,           setErrors]           = useState({});
+  const [submitting,       setSubmitting]       = useState(false);
+  const [submitted,        setSubmitted]        = useState(false);
+  const [serverMsg,        setServerMsg]        = useState('');
+  const [paymentAttempted, setPaymentAttempted] = useState(false);
   const fileRef = useRef(null);
+
+  const handlePayNow = () => {
+    setPaymentAttempted(true);
+    window.location.href = PHONEPE_LINK;
+  };
 
   const handleChange = useCallback((e) => {
     const { name, value } = e.target;
@@ -52,6 +63,8 @@ export default function FormPage() {
     if (!form.maritalStatus)                  e.maritalStatus = 'Required';
     if (!form.educationQualifications.trim()) e.educationQualifications = 'Required';
     if (!form.residenceAddress.trim())        e.residenceAddress = 'Required';
+    if (!paymentAttempted)                    e.payment = 'Please click Pay Now and complete the payment first.';
+    if (!form.transactionId.trim())           e.transactionId = 'Transaction ID is required after payment.';
     return e;
   };
 
@@ -62,6 +75,7 @@ export default function FormPage() {
     setSubmitting(true); setServerMsg('');
     const fd = new FormData();
     Object.entries(form).forEach(([k, v]) => fd.append(k, v));
+    fd.append('paymentAttempted', paymentAttempted);
     if (file) fd.append('paymentScreenshot', file);
     try {
       const { data } = await api.post('/api/submit-form', fd, {
@@ -91,7 +105,7 @@ export default function FormPage() {
           </div>
           <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">Submitted Successfully!</h2>
           <p className="text-gray-600 mb-6 text-sm leading-relaxed">{serverMsg}</p>
-          <button onClick={() => { setSubmitted(false); setForm(INITIAL); setFile(null); setPreview(null); }}
+          <button onClick={() => { setSubmitted(false); setForm(INITIAL); setFile(null); setPreview(null); setPaymentAttempted(false); }}
             className="btn-primary w-full">Submit Another Response</button>
         </div>
       </div>
@@ -194,12 +208,57 @@ export default function FormPage() {
             </F>
           </div>
 
+          {/* Payment */}
+          <SectionHeader icon="💳" title="Payment" />
+          <div className="px-3 md:px-6 py-3 md:py-5 space-y-4">
+
+            {/* Pay Button */}
+            <div className="bg-purple-50 border border-purple-100 rounded-xl p-4">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-semibold text-gray-800">Membership Fee <span className="text-red-500">*</span></p>
+                <p className="text-lg font-bold text-purple-700">₹{AMOUNT}</p>
+              </div>
+              <p className="text-xs text-gray-500 mb-3">
+                Payment is <strong>mandatory</strong>. Click Pay Now, complete the payment, then return and enter your Transaction ID.
+              </p>
+              {errors.payment && (
+                <p className="text-xs text-red-600 font-medium mb-2">⚠ {errors.payment}</p>
+              )}
+              <button type="button" onClick={handlePayNow}
+                className="w-full flex items-center justify-center gap-2 bg-[#5f259f] hover:bg-[#4e1d83] active:bg-[#3d1666] text-white font-semibold text-sm py-3 rounded-lg transition-colors shadow-md">
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                </svg>
+                Pay ₹{AMOUNT} via PhonePe
+              </button>
+              {paymentAttempted && (
+                <div className="mt-3 flex items-start gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+                  <svg className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <p className="text-xs text-green-700 font-medium">
+                    Redirecting to PhonePe. After payment, return here and enter your Transaction ID below.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Transaction ID */}
+            <F label="Transaction ID / UTR Number" required error={errors.transactionId}>
+              <input type="text" name="transactionId" value={form.transactionId}
+                onChange={handleChange}
+                placeholder="e.g. T2024031512345678 or UTR number"
+                className={`field-input ${errors.transactionId ? 'field-input-error' : ''}`} />
+              <p className="text-xs text-gray-400 mt-1">Enter the transaction ID shown in PhonePe after payment.</p>
+            </F>
+          </div>
+
           {/* Payment Screenshot */}
-          <SectionHeader icon="💳" title="Payment Screenshot" />
+          <SectionHeader icon="🖼️" title="Payment Screenshot (Optional)" />
           <div className="px-3 md:px-6 py-3 md:py-5">
             <p className="text-xs md:text-sm text-gray-500 mb-3">
               Upload membership payment screenshot (JPEG / PNG, max 2 MB).
-              Expected amount: <strong className="text-blue-700">₹500</strong>
+              Expected amount: <strong className="text-blue-700">₹{AMOUNT}</strong>
             </p>
             {!preview ? (
               <label htmlFor="fileInput"

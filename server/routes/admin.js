@@ -58,15 +58,16 @@ router.put(
 // ── GET /api/admin/stats ──────────────────────────────────────────────────────
 router.get('/stats', async (_req, res) => {
   try {
-    const [total, paid, pending, unpaid, invalid] = await Promise.all([
+    const [total, paid, paidVerify, pending, unpaid, invalid] = await Promise.all([
       Submission.countDocuments(),
       Submission.countDocuments({ paymentStatus: 'Paid' }),
+      Submission.countDocuments({ paymentStatus: 'Paid (Verification Required)' }),
       Submission.countDocuments({ paymentStatus: 'Pending' }),
       Submission.countDocuments({ paymentStatus: 'Unpaid' }),
       Submission.countDocuments({ paymentStatus: 'Invalid Screenshot' }),
     ]);
 
-    res.json({ success: true, data: { total, paid, pending, unpaid, invalid } });
+    res.json({ success: true, data: { total, paid, paidVerify, pending, unpaid, invalid } });
   } catch (err) {
     console.error('Stats error:', err);
     res.status(500).json({ success: false, message: 'Server error' });
@@ -79,7 +80,7 @@ router.get(
   [
     query('startDate').optional().isISO8601().withMessage('Invalid start date'),
     query('endDate').optional().isISO8601().withMessage('Invalid end date'),
-    query('status').optional().isIn(['All', 'Paid', 'Pending', 'Unpaid', 'Invalid Screenshot']),
+    query('status').optional().isIn(['All', 'Paid', 'Paid (Verification Required)', 'Pending', 'Unpaid', 'Invalid Screenshot']),
     query('page').optional().isInt({ min: 1 }),
     query('limit').optional().isInt({ min: 1, max: 500 }),
   ],
@@ -150,7 +151,7 @@ router.patch(
   [
     param('id').isMongoId().withMessage('Invalid submission ID'),
     body('status')
-      .isIn(['Paid', 'Pending', 'Unpaid', 'Invalid Screenshot'])
+      .isIn(['Paid', 'Paid (Verification Required)', 'Pending', 'Unpaid', 'Invalid Screenshot'])
       .withMessage('Invalid status value'),
   ],
   async (req, res) => {

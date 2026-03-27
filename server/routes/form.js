@@ -46,6 +46,8 @@ const formValidation = [
     .isLength({ max: 500 }).escape(),
 
   body('interests').optional().trim().isLength({ max: 300 }).escape(),
+  body('transactionId').optional().trim().isLength({ max: 100 }).escape(),
+  body('paymentAttempted').optional().isBoolean(),
 ];
 
 // ── POST /api/submit-form ─────────────────────────────────────────────────────
@@ -84,15 +86,24 @@ router.post(
         name, parentsName, religion, caste, maritalStatus,
         designation, division, circle,
         educationQualifications, residenceAddress, interests,
+        transactionId, paymentAttempted,
       } = req.body;
 
-      // OCR & payment logic
-      let paymentStatus    = 'Unpaid';
-      let extractedAmount  = null;
-      let ocrText          = null;
+      const attempted = paymentAttempted === 'true' || paymentAttempted === true;
+      const txnId     = transactionId?.trim() || null;
+
+      // ── Payment status logic ──────────────────────────────────────────────
+      // Priority: transactionId > screenshot OCR > paymentAttempted flag
+      let paymentStatus   = 'Unpaid';
+      let extractedAmount = null;
+      let ocrText         = null;
       let screenshotRelPath = null;
 
-      if (req.file) {
+      if (txnId) {
+        // User provided a transaction ID → needs manual verification
+        paymentStatus = 'Paid (Verification Required)';
+      } else if (req.file) {
+        // Screenshot uploaded → run OCR
         screenshotRelPath = path.relative(
           path.join(__dirname, '..'),
           req.file.path
@@ -104,7 +115,11 @@ router.post(
         const result = determinePaymentStatus(req.file.path, amount, expectedAmount);
         paymentStatus   = result.status;
         extractedAmount = result.amount;
+      } else if (attempted) {
+        // User clicked Pay but gave no proof
+        paymentStatus = 'Pending';
       }
+      // else → remains 'Unpaid'
 
       const submission = new Submission({
         name,
@@ -122,6 +137,8 @@ router.post(
         extractedAmount,
         paymentStatus,
         ocrText,
+        transactionId:           txnId,
+        paymentAttempted:        attempted,
       });
 
       await submission.save();

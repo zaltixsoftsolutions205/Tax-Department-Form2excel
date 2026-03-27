@@ -84,12 +84,22 @@ const submissionSchema = new mongoose.Schema(
     },
     paymentStatus: {
       type: String,
-      enum: ['Paid', 'Pending', 'Unpaid', 'Invalid Screenshot'],
+      enum: ['Paid', 'Pending', 'Unpaid', 'Invalid Screenshot', 'Paid (Verification Required)'],
       default: 'Unpaid',
     },
     ocrText: {
       type: String,
       default: null,
+    },
+    // PhonePe / UPI transaction fields
+    transactionId: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+    paymentAttempted: {
+      type: Boolean,
+      default: false,
     },
     manualOverride: {
       type: Boolean,
