@@ -87,15 +87,20 @@ router.post(
         transactionId,
       } = req.body;
 
-      const txnId = transactionId?.trim() || null;
+      const txnId    = transactionId?.trim() || null;
+      const attempted = req.body.paymentAttempted === 'true' || req.body.paymentAttempted === true;
 
       // ── Payment status logic ──────────────────────────────────────────────
-      // Transaction ID provided → needs admin verification, otherwise Unpaid
+      // transactionId provided → needs admin verification
+      // paymentAttempted but no txnId → Pending (paid but didn't enter ID yet)
+      // neither → Unpaid
       let paymentStatus     = 'Unpaid';
       let screenshotRelPath = null;
 
       if (txnId) {
         paymentStatus = 'Paid (Verification Required)';
+      } else if (attempted) {
+        paymentStatus = 'Pending';
       }
 
       if (req.file) {
@@ -120,15 +125,15 @@ router.post(
         paymentScreenshot:       screenshotRelPath,
         paymentStatus,
         transactionId:           txnId,
+        paymentAttempted:        attempted,
       });
 
       await submission.save();
 
       return res.status(201).json({
-        success:        true,
-        message:        'Form submitted successfully!',
+        success:       true,
+        message:       'Form submitted successfully!',
         paymentStatus,
-        extractedAmount,
       });
     } catch (error) {
       console.error('Submit form error:', error);

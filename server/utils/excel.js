@@ -136,18 +136,20 @@ async function generateExcel(submissions) {
     { key: 'count', width: 12 },
   ];
 
-  const paid    = submissions.filter(s => s.paymentStatus === 'Paid').length;
-  const pending = submissions.filter(s => s.paymentStatus === 'Pending').length;
-  const unpaid  = submissions.filter(s => s.paymentStatus === 'Unpaid').length;
-  const invalid = submissions.filter(s => s.paymentStatus === 'Invalid Screenshot').length;
+  const paid       = submissions.filter(s => s.paymentStatus === 'Paid').length;
+  const paidVerify = submissions.filter(s => s.paymentStatus === 'Paid (Verification Required)').length;
+  const pending    = submissions.filter(s => s.paymentStatus === 'Pending').length;
+  const unpaid     = submissions.filter(s => s.paymentStatus === 'Unpaid').length;
+  const invalid    = submissions.filter(s => s.paymentStatus === 'Invalid Screenshot').length;
 
   const summaryData = [
-    ['Total Submissions',      submissions.length],
-    ['Paid',                   paid],
-    ['Pending',                pending],
-    ['Unpaid',                 unpaid],
-    ['Invalid Screenshot',     invalid],
-    ['Generated On',           new Date().toLocaleString('en-IN')],
+    ['Total Submissions',            submissions.length],
+    ['Paid',                         paid],
+    ['Paid (Verification Required)', paidVerify],
+    ['Pending',                      pending],
+    ['Unpaid',                       unpaid],
+    ['Invalid Screenshot',           invalid],
+    ['Generated On',                 new Date().toLocaleString('en-IN')],
   ];
 
   const summaryHeader = summary.addRow(['Description', 'Count / Value']);

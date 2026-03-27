@@ -1,9 +1,12 @@
 import { useState, useRef, useCallback } from 'react';
 import api from '../api';
 
-const AMOUNT = 1;
-const UPI_ID = 'aguru7962@ybl';
-const UPI_LINK = `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent('TCTS Association')}&am=${AMOUNT}&cu=INR&tn=${encodeURIComponent('TCTS Membership Fee')}`;
+const AMOUNT  = 500;
+const UPI_ID   = import.meta.env.VITE_UPI_ID   || 'aguru7962@ybl';
+const UPI_NAME = import.meta.env.VITE_UPI_NAME || 'Union Bank';
+
+// UPI deep link — opens PhonePe / GPay / Paytm with ID & amount pre-filled
+const UPI_LINK = `upi://pay?pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent(UPI_NAME)}&am=${AMOUNT}&cu=INR&tn=${encodeURIComponent('Membership Fee')}`;
 
 const INITIAL = {
   name: '', parentsName: '', religion: '', caste: '',
@@ -13,13 +16,14 @@ const INITIAL = {
 };
 
 export default function FormPage() {
-  const [form,       setForm]       = useState(INITIAL);
-  const [file,       setFile]       = useState(null);
-  const [preview,    setPreview]    = useState(null);
-  const [errors,     setErrors]     = useState({});
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted,  setSubmitted]  = useState(false);
-  const [serverMsg,  setServerMsg]  = useState('');
+  const [form,             setForm]             = useState(INITIAL);
+  const [file,             setFile]             = useState(null);
+  const [preview,          setPreview]          = useState(null);
+  const [errors,           setErrors]           = useState({});
+  const [submitting,       setSubmitting]       = useState(false);
+  const [submitted,        setSubmitted]        = useState(false);
+  const [serverMsg,        setServerMsg]        = useState('');
+  const [paymentAttempted, setPaymentAttempted] = useState(false);
   const fileRef = useRef(null);
 
   const handleChange = useCallback((e) => {
@@ -48,6 +52,11 @@ export default function FormPage() {
     if (fileRef.current) fileRef.current.value = '';
   };
 
+  const handlePayClick = () => {
+    setPaymentAttempted(true);
+    window.location.href = UPI_LINK;
+  };
+
   const validate = () => {
     const e = {};
     if (!form.name.trim())                    e.name = 'Required';
@@ -57,7 +66,6 @@ export default function FormPage() {
     if (!form.maritalStatus)                  e.maritalStatus = 'Required';
     if (!form.educationQualifications.trim()) e.educationQualifications = 'Required';
     if (!form.residenceAddress.trim())        e.residenceAddress = 'Required';
-    if (!form.transactionId.trim())           e.transactionId = 'Transaction ID is required after payment.';
     return e;
   };
 
@@ -68,6 +76,7 @@ export default function FormPage() {
     setSubmitting(true); setServerMsg('');
     const fd = new FormData();
     Object.entries(form).forEach(([k, v]) => fd.append(k, v));
+    fd.append('paymentAttempted', paymentAttempted);
     if (file) fd.append('paymentScreenshot', file);
     try {
       const { data } = await api.post('/api/submit-form', fd, {
@@ -77,6 +86,8 @@ export default function FormPage() {
       setServerMsg(
         data.paymentStatus === 'Paid (Verification Required)'
           ? 'Form submitted! Your payment will be verified by the admin shortly.'
+          : data.paymentStatus === 'Pending'
+          ? 'Form submitted. Admin will verify your payment status.'
           : 'Form submitted. Please complete the payment to activate your membership.'
       );
     } catch (err) {
@@ -96,7 +107,7 @@ export default function FormPage() {
           </div>
           <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">Submitted Successfully!</h2>
           <p className="text-gray-600 mb-6 text-sm leading-relaxed">{serverMsg}</p>
-          <button onClick={() => { setSubmitted(false); setForm(INITIAL); setFile(null); setPreview(null); }}
+          <button onClick={() => { setSubmitted(false); setForm(INITIAL); setFile(null); setPreview(null); setPaymentAttempted(false); }}
             className="btn-primary w-full">Submit Another Response</button>
         </div>
       </div>
@@ -203,34 +214,61 @@ export default function FormPage() {
           <SectionHeader icon="💳" title="Payment" />
           <div className="px-3 md:px-6 py-3 md:py-5 space-y-4">
 
-            {/* UPI ID */}
+            {/* UPI Pay Button */}
             <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
               <div className="flex items-center justify-between mb-3">
-                <p className="text-sm font-semibold text-gray-800">Membership Fee <span className="text-red-500">*</span></p>
-                <p className="text-xl font-bold text-blue-700">₹{AMOUNT}</p>
+                <p className="text-sm font-semibold text-gray-800">Membership Fee</p>
+                <p className="text-2xl font-bold text-blue-700">₹{AMOUNT}</p>
               </div>
+
+              {/* UPI ID display */}
+              <div className="bg-white border border-blue-200 rounded-xl px-4 py-3 mb-4 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[10px] text-gray-400 mb-0.5 uppercase tracking-wide">Pay to UPI ID</p>
+                  <p className="text-base font-bold text-gray-800 tracking-wide">{UPI_ID}</p>
+                </div>
+                <CopyButton text={UPI_ID} />
+              </div>
+
               <p className="text-xs text-gray-500 mb-3">
-                Click <strong>Pay Now</strong> to open PhonePe / GPay with ₹{AMOUNT} pre-filled. After payment, enter your Transaction ID below.
+                Tap <strong>Pay ₹{AMOUNT}</strong> — your UPI app opens with the ID and amount already filled in.
+                Complete the payment, then come back and enter your Transaction ID below.
               </p>
-              <a
-                href={UPI_LINK}
-                className="flex items-center justify-center gap-2 w-full bg-blue-700 hover:bg-blue-800 active:bg-blue-900 text-white font-semibold py-3 rounded-xl text-sm transition-colors"
+
+              <button
+                type="button"
+                onClick={handlePayClick}
+                className="w-full bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-colors shadow-sm text-base"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                     d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                 </svg>
-                Pay ₹{AMOUNT} Now
-              </a>
+                Pay ₹{AMOUNT}
+              </button>
             </div>
 
+            {/* After-payment guidance */}
+            {paymentAttempted && (
+              <div className="bg-green-50 border border-green-200 rounded-xl p-3 flex items-start gap-2">
+                <svg className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p className="text-sm text-green-800">
+                  After completing payment, please return and submit the form with your Transaction ID below.
+                </p>
+              </div>
+            )}
+
             {/* Transaction ID */}
-            <F label="Transaction ID / UTR Number" required error={errors.transactionId}>
+            <F label="Transaction ID / UTR Number" error={errors.transactionId}>
               <input type="text" name="transactionId" value={form.transactionId}
                 onChange={handleChange}
                 placeholder="e.g. T2024031512345678 or UTR number"
                 className={`field-input ${errors.transactionId ? 'field-input-error' : ''}`} />
-              <p className="text-xs text-gray-400 mt-1">Enter the transaction ID shown in your UPI app after payment.</p>
+              <p className="text-xs text-gray-400 mt-1">
+                Enter the transaction ID shown in your PhonePe app after payment.
+              </p>
             </F>
           </div>
 
@@ -319,6 +357,16 @@ function F({ label, required, error, children, className = '' }) {
   );
 }
 
+function CopyButton({ text }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button type="button"
+      onClick={() => { navigator.clipboard?.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
+      className="text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1.5 rounded-lg flex-shrink-0 font-medium">
+      {copied ? '✓ Copied' : 'Copy'}
+    </button>
+  );
+}
 
 function Spin() {
   return (
