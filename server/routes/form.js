@@ -130,8 +130,8 @@ router.post(
 
       // ── Send SMS notification ─────────────────────────────────────────────
       const smsMessage = paymentStatus === 'Paid'
-        ? `Dear ${name}, you have been successfully registered with Commercial Taxes SC & ST Employees Association. Your payment of Rs.1000 has been verified. Welcome!`
-        : `Dear ${name}, your registration with Commercial Taxes SC & ST Employees Association has been received. Please complete your payment of Rs.1000 to activate your membership.`;
+        ? `Dear ${name}, you have been successfully registered with Commercial Taxes SC & ST Employees Association. Your payment of Rs.1 has been verified. Welcome!`
+        : `Dear ${name}, your registration with Commercial Taxes SC & ST Employees Association has been received. Please complete your payment of Rs.1 to activate your membership.`;
 
       sendSMS(mobile, smsMessage).catch(() => {}); // fire and forget
 

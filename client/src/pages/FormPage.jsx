@@ -2,11 +2,11 @@ import { useState, useRef, useCallback } from 'react';
 import api from '../api';
 
 const ACCOUNT_NAME = 'Commercial Taxes SC and ST Employees Association';
-const ACCOUNT_NO   = '925010044679607';
+const ACCOUNT_NO   = '081710100101759';
 const BANK_NAME    = 'Union Bank of India';
 const IFSC         = 'UBIN080817';
 const BRANCH       = 'Kalakada';
-const AMOUNT       = 1000;
+const AMOUNT       = 1;
 
 const INITIAL = {
   name: '', parentsName: '', mobile: '', maritalStatus: '',

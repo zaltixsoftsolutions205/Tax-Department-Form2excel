@@ -2,10 +2,10 @@ const { createWorker } = require('tesseract.js');
 
 // Expected amount is fetched dynamically from DB at submission time (passed as arg)
 // Fallback used only in standalone tests
-const DEFAULT_EXPECTED = parseInt(process.env.EXPECTED_AMOUNT || '1000', 10);
+const DEFAULT_EXPECTED = parseInt(process.env.EXPECTED_AMOUNT || '1', 10);
 
 // Account number to verify in screenshot
-const ACCOUNT_NO = process.env.ACCOUNT_NO || '925010044679607';
+const ACCOUNT_NO = process.env.ACCOUNT_NO || '081710100101759';
 
 /**
  * Checks whether OCR text contains the bank account number.
