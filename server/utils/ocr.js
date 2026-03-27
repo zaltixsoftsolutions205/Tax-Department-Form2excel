@@ -164,7 +164,8 @@ function parseNum(str) {
  * Rules:
  *   - No screenshot                          → Unpaid
  *   - Screenshot + account found + amount OK → Paid
- *   - Anything else                          → Unpaid
+ *   - Screenshot + amount OK (no account)    → Pending  (UPI screenshots don't show bank account)
+ *   - Screenshot but amount wrong / missing  → Unpaid
  *
  * @param {string|null} screenshotPath
  * @param {number|null} amount         - extracted by OCR
@@ -172,11 +173,12 @@ function parseNum(str) {
  * @param {string}      ocrText        - full OCR text for account check
  */
 function determinePaymentStatus(screenshotPath, amount, expectedAmount = DEFAULT_EXPECTED, ocrText = '') {
-  if (!screenshotPath)                          return { status: 'Unpaid', amount: null };
+  if (!screenshotPath)                          return { status: 'Unpaid',  amount: null };
   const accountFound = checkAccountInText(ocrText);
   const amountOk     = amount !== null && amount >= expectedAmount;
-  if (accountFound && amountOk)                 return { status: 'Paid',   amount };
-  return                                               { status: 'Unpaid', amount };
+  if (accountFound && amountOk)                 return { status: 'Paid',    amount };
+  if (amountOk)                                 return { status: 'Pending', amount };
+  return                                               { status: 'Unpaid',  amount };
 }
 
 module.exports = { extractTextFromImage, determinePaymentStatus, extractPaymentAmount };
