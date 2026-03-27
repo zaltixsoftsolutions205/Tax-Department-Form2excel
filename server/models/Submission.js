@@ -68,9 +68,9 @@ const submissionSchema = new mongoose.Schema(
     },
     residenceAddress: {
       type: String,
-      required: [true, 'Residence address is required'],
       trim: true,
       maxlength: [500, 'Residence address cannot exceed 500 characters'],
+      default: '',
     },
     interests: {
       type: String,

@@ -34,9 +34,7 @@ const formValidation = [
     .trim().notEmpty().withMessage('Education qualifications are required')
     .isLength({ max: 500 }).escape(),
 
-  body('residenceAddress')
-    .trim().notEmpty().withMessage('Residence address is required')
-    .isLength({ max: 500 }).escape(),
+  body('residenceAddress').optional().trim().isLength({ max: 500 }).escape(),
 
   body('mobile')
     .trim().notEmpty().withMessage('Mobile number is required')
