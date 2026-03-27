@@ -2,7 +2,7 @@ import { useState, useRef, useCallback } from 'react';
 import api from '../api';
 
 const AMOUNT  = 500;
-const UPI_ID   = import.meta.env.VITE_UPI_ID   || 'aguru7962@ybl';
+const UPI_ID   = import.meta.env.VITE_UPI_ID   || 'aguru79621@ybl';
 const UPI_NAME = import.meta.env.VITE_UPI_NAME || 'Union Bank';
 
 // UPI deep link — opens PhonePe / GPay / Paytm with ID & amount pre-filled
