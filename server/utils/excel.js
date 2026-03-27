@@ -34,7 +34,7 @@ async function generateExcel(submissions) {
   });
 
   // Title row (row 1)
-  ws.mergeCells('A1:P1');
+  ws.mergeCells('A1:Q1');
   const titleCell = ws.getCell('A1');
   titleCell.value =
     'TELANGANA COMMERCIAL TAXES S.C./S.T. EMPLOYEES ASSOCIATION – Submissions';
@@ -48,6 +48,7 @@ async function generateExcel(submissions) {
     { key: 'sno',                    width: 6  },
     { key: 'name',                   width: 22 },
     { key: 'parentsName',            width: 22 },
+    { key: 'mobile',                 width: 16 },
     { key: 'religion',               width: 12 },
     { key: 'caste',                  width: 12 },
     { key: 'maritalStatus',          width: 14 },
@@ -57,17 +58,16 @@ async function generateExcel(submissions) {
     { key: 'educationQualifications',width: 26 },
     { key: 'residenceAddress',       width: 32 },
     { key: 'interests',              width: 26 },
-    { key: 'transactionId',          width: 26 },
     { key: 'extractedAmount',        width: 20 },
     { key: 'paymentStatus',          width: 26 },
     { key: 'submittedAt',            width: 22 },
   ];
 
   const HEADERS = [
-    'S.No', 'Name', "Parent's Name", 'Religion', 'Caste', 'Marital Status',
+    'S.No', 'Name', "Parent's Name", 'Mobile', 'Religion', 'Caste', 'Marital Status',
     'Designation', 'Division', 'Circle', 'Education Qualifications',
     'Residence Address', 'Interests / Hobbies',
-    'Transaction ID / UTR', 'Extracted Amount (₹)', 'Payment Status', 'Submitted At',
+    'Extracted Amount (₹)', 'Payment Status', 'Submitted At',
   ];
 
   // Header row (row 2)
@@ -87,16 +87,16 @@ async function generateExcel(submissions) {
       sno:                    idx + 1,
       name:                   sub.name,
       parentsName:            sub.parentsName,
-      religion:               sub.religion,
-      caste:                  sub.caste,
+      mobile:                 sub.mobile          || '—',
+      religion:               sub.religion        || '—',
+      caste:                  sub.caste           || '—',
       maritalStatus:          sub.maritalStatus,
-      designation:            sub.designation || '—',
-      division:               sub.division    || '—',
-      circle:                 sub.circle      || '—',
+      designation:            sub.designation     || '—',
+      division:               sub.division        || '—',
+      circle:                 sub.circle          || '—',
       educationQualifications:sub.educationQualifications,
-      residenceAddress:       sub.residenceAddress,
-      interests:              sub.interests       || '—',
-      transactionId:          sub.transactionId   || '—',
+      residenceAddress:       sub.residenceAddress || '—',
+      interests:              sub.interests        || '—',
       extractedAmount:        sub.extractedAmount != null ? sub.extractedAmount : 'N/A',
       paymentStatus:          sub.paymentStatus,
       submittedAt:            new Date(sub.submittedAt).toLocaleString('en-IN', {

@@ -164,6 +164,9 @@ function MobileCard({ sub, idx, expanded, onToggle, onStatusUpdated, onViewImage
           <p className="text-xs text-gray-500 mt-0.5 truncate">
             {sub.designation || '—'} · {sub.division || '—'}
           </p>
+          {sub.mobile && (
+            <p className="text-xs text-gray-500 mt-0.5">📞 {sub.mobile}</p>
+          )}
         </div>
         <div className="flex-shrink-0">
           <StatusDropdown currentStatus={sub.paymentStatus} submissionId={sub._id} onUpdated={onStatusUpdated} />
@@ -175,9 +178,6 @@ function MobileCard({ sub, idx, expanded, onToggle, onStatusUpdated, onViewImage
           Amount: <strong>{sub.extractedAmount != null ? `₹${sub.extractedAmount}` : '—'}</strong>
           {sub.manualOverride && <span className="text-purple-600 ml-1 text-[10px]">(edited)</span>}
         </span>
-        {sub.transactionId && (
-          <span className="text-xs text-gray-500 font-mono">Txn: {sub.transactionId}</span>
-        )}
         <div className="flex items-center gap-3">
           {sub.paymentScreenshot && (
             <button onClick={() => onViewImage(imgUrl(sub.paymentScreenshot))}
@@ -194,11 +194,12 @@ function MobileCard({ sub, idx, expanded, onToggle, onStatusUpdated, onViewImage
       {expanded && (
         <div className="mt-2 bg-gray-50 rounded-lg p-2.5 grid grid-cols-2 gap-x-3 gap-y-2">
           <KV label="Parent's Name"  v={sub.parentsName} />
-          <KV label="Religion/Caste" v={`${sub.religion} / ${sub.caste}`} />
+          <KV label="Mobile"         v={sub.mobile || '—'} />
+          <KV label="Religion/Caste" v={`${sub.religion || '—'} / ${sub.caste || '—'}`} />
           <KV label="Marital Status" v={sub.maritalStatus} />
           <KV label="Circle"         v={sub.circle || '—'} />
           <KV label="Education"      v={sub.educationQualifications} />
-          <KV label="Address"        v={sub.residenceAddress} full />
+          <KV label="Address"        v={sub.residenceAddress || '—'} full />
           {sub.interests && <KV label="Interests" v={sub.interests} full />}
         </div>
       )}
@@ -272,7 +273,7 @@ export default function AdminPage() {
   const displayed = submissions.filter(s => {
     if (!search.trim()) return true;
     const q = search.toLowerCase();
-    return ['name','designation','division','circle','residenceAddress']
+    return ['name','mobile','designation','division','circle','residenceAddress']
       .some(k => s[k]?.toLowerCase().includes(q));
   });
 
@@ -309,7 +310,7 @@ export default function AdminPage() {
             </div>
           </div>
 
-          {/* Desktop layout: single row (original) */}
+          {/* Desktop layout: single row */}
           <div className="hidden md:flex items-center justify-between gap-4">
             <div>
               <h1 className="text-lg font-bold leading-tight">TCTS Association — Admin Panel</h1>
@@ -365,7 +366,7 @@ export default function AdminPage() {
             <div>
               <label className="field-label">Search</label>
               <input type="search" value={search} onChange={e => setSearch(e.target.value)}
-                placeholder="Name, Designation, Division…" className="field-input text-sm py-2" />
+                placeholder="Name, Mobile, Designation…" className="field-input text-sm py-2" />
             </div>
             <div>
               <label className="field-label">Payment Status</label>
@@ -388,7 +389,7 @@ export default function AdminPage() {
             </div>
           </div>
 
-          {/* Desktop: 4 columns (original) */}
+          {/* Desktop: 4 columns */}
           <div className="hidden md:grid md:grid-cols-4 gap-3">
             <div>
               <label className="field-label">Payment Status</label>
@@ -410,7 +411,7 @@ export default function AdminPage() {
             <div>
               <label className="field-label">Search</label>
               <input type="search" value={search} onChange={e => setSearch(e.target.value)}
-                placeholder="Name, Designation, Division…" className="field-input text-sm py-2" />
+                placeholder="Name, Mobile, Designation…" className="field-input text-sm py-2" />
             </div>
           </div>
 
@@ -466,14 +467,14 @@ export default function AdminPage() {
                 ))}
               </div>
 
-              {/* Desktop table (original) */}
+              {/* Desktop table */}
               <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-gray-50 border-b border-gray-200 text-left">
-                      {['#','Name',"Parent's Name",'Religion / Caste','Marital Status',
+                      {['#','Name',"Parent's Name",'Mobile','Religion / Caste','Marital Status',
                         'Designation','Division / Circle','Education','Address',
-                        'Txn ID / UTR','Amount (₹)','Status','Screenshot','Date',''].map(h => (
+                        'Amount (₹)','Status','Screenshot','Date',''].map(h => (
                         <th key={h} className="px-3 py-2.5 text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">{h}</th>
                       ))}
                     </tr>
@@ -487,17 +488,15 @@ export default function AdminPage() {
                           <td className="px-3 py-2.5 text-gray-400 text-xs">{idx + 1}</td>
                           <td className="px-3 py-2.5 font-medium text-gray-800 whitespace-nowrap">{sub.name}</td>
                           <td className="px-3 py-2.5 text-gray-600 whitespace-nowrap">{sub.parentsName}</td>
-                          <td className="px-3 py-2.5 text-gray-600 whitespace-nowrap">{sub.religion} / {sub.caste}</td>
+                          <td className="px-3 py-2.5 text-gray-600 whitespace-nowrap font-mono text-xs">{sub.mobile || '—'}</td>
+                          <td className="px-3 py-2.5 text-gray-600 whitespace-nowrap">{sub.religion || '—'} / {sub.caste || '—'}</td>
                           <td className="px-3 py-2.5 text-gray-600 whitespace-nowrap">{sub.maritalStatus}</td>
                           <td className="px-3 py-2.5 text-gray-600 whitespace-nowrap">{sub.designation || '—'}</td>
                           <td className="px-3 py-2.5 text-gray-600 whitespace-nowrap">
                             {sub.division || '—'}{sub.circle && <span className="text-gray-400"> / {sub.circle}</span>}
                           </td>
                           <td className="px-3 py-2.5 text-gray-600 max-w-[130px] truncate">{sub.educationQualifications}</td>
-                          <td className="px-3 py-2.5 text-gray-600 max-w-[150px] truncate">{sub.residenceAddress}</td>
-                          <td className="px-3 py-2.5 text-gray-600 whitespace-nowrap font-mono text-xs">
-                            {sub.transactionId || '—'}
-                          </td>
+                          <td className="px-3 py-2.5 text-gray-600 max-w-[150px] truncate">{sub.residenceAddress || '—'}</td>
                           <td className="px-3 py-2.5 font-semibold text-gray-800 whitespace-nowrap">
                             {sub.extractedAmount != null ? `₹${sub.extractedAmount}` : '—'}
                           </td>
@@ -520,10 +519,10 @@ export default function AdminPage() {
                         </tr>
                         {expandedId === sub._id && (
                           <tr key={`${sub._id}-detail`} className="bg-blue-50/40">
-                            <td colSpan={14} className="px-5 py-3">
+                            <td colSpan={15} className="px-5 py-3">
                               <div className="grid grid-cols-3 gap-4 text-sm">
                                 <Detail label="Interests / Hobbies" value={sub.interests || '—'} />
-                                <Detail label="Full Address" value={sub.residenceAddress} />
+                                <Detail label="Full Address" value={sub.residenceAddress || '—'} />
                                 <Detail label="OCR Text" value={sub.ocrText ? sub.ocrText.substring(0, 200) + '…' : 'N/A'} mono />
                               </div>
                             </td>
