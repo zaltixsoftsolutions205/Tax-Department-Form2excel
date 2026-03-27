@@ -5,8 +5,9 @@ const AMOUNT  = 500;
 const UPI_ID   = import.meta.env.VITE_UPI_ID   || 'aguru79621@ybl';
 const UPI_NAME = import.meta.env.VITE_UPI_NAME || 'Union Bank';
 
-// UPI deep link — opens PhonePe / GPay / Paytm with ID & amount pre-filled
-const UPI_LINK = `upi://pay?pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent(UPI_NAME)}&am=${AMOUNT}&cu=INR&tn=${encodeURIComponent('Membership Fee')}`;
+// UPI deep link — opens PhonePe / GPay / Paytm with UPI ID pre-filled
+// Amount is NOT passed (some UPI apps block deep links with fixed amount)
+const UPI_LINK = `upi://pay?pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent(UPI_NAME)}&cu=INR&tn=${encodeURIComponent('Membership Fee')}`;
 
 const INITIAL = {
   name: '', parentsName: '', religion: '', caste: '',
@@ -231,8 +232,8 @@ export default function FormPage() {
               </div>
 
               <p className="text-xs text-gray-500 mb-3">
-                Tap <strong>Pay ₹{AMOUNT}</strong> — your UPI app opens with the ID and amount already filled in.
-                Complete the payment, then come back and enter your Transaction ID below.
+                Tap <strong>Pay ₹{AMOUNT}</strong> — your UPI app opens with the ID ready.
+                Enter <strong>₹{AMOUNT}</strong> as the amount, complete the payment, then come back and enter your Transaction ID below.
               </p>
 
               <button
