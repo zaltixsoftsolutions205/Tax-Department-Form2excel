@@ -1,8 +1,8 @@
 import { useState, useRef, useCallback } from 'react';
 import api from '../api';
 
-const AMOUNT  = 1;
-const UPI_LINK = `upi://pay?pa=9398654692@ybl&pn=${encodeURIComponent('TCTS Association')}&am=${AMOUNT}&cu=INR&tn=${encodeURIComponent('TCTS Membership Fee')}`;
+const AMOUNT = 1;
+const UPI_ID = '9398654692@ybl';
 
 const INITIAL = {
   name: '', parentsName: '', religion: '', caste: '',
@@ -12,13 +12,13 @@ const INITIAL = {
 };
 
 export default function FormPage() {
-  const [form,             setForm]             = useState(INITIAL);
-  const [file,             setFile]             = useState(null);
-  const [preview,          setPreview]          = useState(null);
-  const [errors,           setErrors]           = useState({});
-  const [submitting,       setSubmitting]       = useState(false);
-  const [submitted,        setSubmitted]        = useState(false);
-  const [serverMsg,        setServerMsg]        = useState('');
+  const [form,       setForm]       = useState(INITIAL);
+  const [file,       setFile]       = useState(null);
+  const [preview,    setPreview]    = useState(null);
+  const [errors,     setErrors]     = useState({});
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted,  setSubmitted]  = useState(false);
+  const [serverMsg,  setServerMsg]  = useState('');
   const fileRef = useRef(null);
 
   const handleChange = useCallback((e) => {
@@ -56,7 +56,7 @@ export default function FormPage() {
     if (!form.maritalStatus)                  e.maritalStatus = 'Required';
     if (!form.educationQualifications.trim()) e.educationQualifications = 'Required';
     if (!form.residenceAddress.trim())        e.residenceAddress = 'Required';
-    if (!form.transactionId.trim())           e.transactionId = 'Transaction ID / Reference number is required.';
+    if (!form.transactionId.trim())           e.transactionId = 'Transaction ID is required after payment.';
     return e;
   };
 
@@ -95,7 +95,7 @@ export default function FormPage() {
           </div>
           <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">Submitted Successfully!</h2>
           <p className="text-gray-600 mb-6 text-sm leading-relaxed">{serverMsg}</p>
-          <button onClick={() => { setSubmitted(false); setForm(INITIAL); setFile(null); setPreview(null); setPaymentAttempted(false); }}
+          <button onClick={() => { setSubmitted(false); setForm(INITIAL); setFile(null); setPreview(null); }}
             className="btn-primary w-full">Submit Another Response</button>
         </div>
       </div>
@@ -202,21 +202,21 @@ export default function FormPage() {
           <SectionHeader icon="💳" title="Payment" />
           <div className="px-3 md:px-6 py-3 md:py-5 space-y-4">
 
-            {/* Pay via UPI ID */}
+            {/* UPI ID */}
             <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
               <div className="flex items-center justify-between mb-3">
                 <p className="text-sm font-semibold text-gray-800">Membership Fee <span className="text-red-500">*</span></p>
                 <p className="text-xl font-bold text-blue-700">₹{AMOUNT}</p>
               </div>
               <p className="text-xs text-gray-500 mb-3">
-                Open <strong>PhonePe / GPay</strong> → Send Money → enter the UPI ID below → pay ₹{AMOUNT}. Then enter your Transaction ID.
+                Open <strong>PhonePe / GPay</strong> → Send Money → search the UPI ID below → pay ₹{AMOUNT}. Then enter your Transaction ID.
               </p>
-              <div className="flex items-center justify-between bg-white border border-blue-100 rounded-lg px-3 py-2">
+              <div className="flex items-center justify-between bg-white border border-blue-100 rounded-lg px-3 py-2.5">
                 <div>
-                  <p className="text-[10px] text-gray-400">UPI ID</p>
-                  <p className="text-sm font-semibold text-gray-800">9398654692@ybl</p>
+                  <p className="text-[10px] text-gray-400 mb-0.5">UPI ID</p>
+                  <p className="text-sm font-semibold text-gray-800 tracking-wide">{UPI_ID}</p>
                 </div>
-                <CopyButton text="9398654692@ybl" />
+                <CopyButton text={UPI_ID} />
               </div>
             </div>
 
@@ -224,9 +224,9 @@ export default function FormPage() {
             <F label="Transaction ID / UTR Number" required error={errors.transactionId}>
               <input type="text" name="transactionId" value={form.transactionId}
                 onChange={handleChange}
-                placeholder="e.g. UTR number / Reference number from your bank app"
+                placeholder="e.g. T2024031512345678 or UTR number"
                 className={`field-input ${errors.transactionId ? 'field-input-error' : ''}`} />
-              <p className="text-xs text-gray-400 mt-1">Enter the UTR / reference number shown in your bank app after transfer.</p>
+              <p className="text-xs text-gray-400 mt-1">Enter the transaction ID shown in your UPI app after payment.</p>
             </F>
           </div>
 
@@ -234,8 +234,7 @@ export default function FormPage() {
           <SectionHeader icon="🖼️" title="Payment Screenshot (Optional)" />
           <div className="px-3 md:px-6 py-3 md:py-5">
             <p className="text-xs md:text-sm text-gray-500 mb-3">
-              Upload membership payment screenshot (JPEG / PNG, max 2 MB).
-              Expected amount: <strong className="text-blue-700">₹{AMOUNT}</strong>
+              Upload your payment screenshot for faster verification (JPEG / PNG, max 2 MB).
             </p>
             {!preview ? (
               <label htmlFor="fileInput"
@@ -316,13 +315,12 @@ function F({ label, required, error, children, className = '' }) {
   );
 }
 
-
 function CopyButton({ text }) {
   const [copied, setCopied] = useState(false);
   return (
     <button type="button"
       onClick={() => { navigator.clipboard?.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
-      className="text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1 rounded-lg flex-shrink-0">
+      className="text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1.5 rounded-lg flex-shrink-0 font-medium">
       {copied ? '✓ Copied' : 'Copy'}
     </button>
   );

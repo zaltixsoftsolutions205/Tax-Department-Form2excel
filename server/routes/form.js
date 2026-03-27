@@ -6,8 +6,6 @@ const { body, validationResult } = require('express-validator');
 
 const upload       = require('../middleware/upload');
 const Submission   = require('../models/Submission');
-const { extractTextFromImage, determinePaymentStatus } = require('../utils/ocr');
-const { getExpectedAmount } = require('../models/Settings');
 
 // ── Validation rules ──────────────────────────────────────────────────────────
 const formValidation = [
@@ -92,18 +90,14 @@ router.post(
       const txnId = transactionId?.trim() || null;
 
       // ── Payment status logic ──────────────────────────────────────────────
-      // Transaction ID provided → Paid, otherwise → Unpaid
-      let paymentStatus   = 'Unpaid';
-      let extractedAmount = null;
-      let ocrText         = null;
+      // Transaction ID provided → needs admin verification, otherwise Unpaid
+      let paymentStatus     = 'Unpaid';
       let screenshotRelPath = null;
 
       if (txnId) {
-        // Mark for admin to verify against UPI history before confirming as Paid
         paymentStatus = 'Paid (Verification Required)';
       }
 
-      // Store screenshot if uploaded (for admin reference)
       if (req.file) {
         screenshotRelPath = path.relative(
           path.join(__dirname, '..'),
@@ -124,9 +118,7 @@ router.post(
         residenceAddress,
         interests:               interests              || '',
         paymentScreenshot:       screenshotRelPath,
-        extractedAmount,
         paymentStatus,
-        ocrText,
         transactionId:           txnId,
       });
 
