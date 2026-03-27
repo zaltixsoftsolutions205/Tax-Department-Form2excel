@@ -2,7 +2,7 @@ import { useState, useRef, useCallback } from 'react';
 import api from '../api';
 
 const AMOUNT = 1;
-const UPI_ID = '9398654692@ybl';
+const UPI_ID = 'aguru7962@ybl';
 const UPI_LINK = `upi://pay?pa=${UPI_ID}&pn=${encodeURIComponent('TCTS Association')}&am=${AMOUNT}&cu=INR&tn=${encodeURIComponent('TCTS Membership Fee')}`;
 
 const INITIAL = {
