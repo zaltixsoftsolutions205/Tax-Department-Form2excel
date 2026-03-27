@@ -1,5 +1,4 @@
 import { useState, useRef, useCallback } from 'react';
-import { QRCodeSVG } from 'qrcode.react';
 import api from '../api';
 
 const AMOUNT  = 1;
@@ -203,23 +202,15 @@ export default function FormPage() {
           <SectionHeader icon="💳" title="Payment" />
           <div className="px-3 md:px-6 py-3 md:py-5 space-y-4">
 
-            {/* Pay via QR */}
+            {/* Pay via UPI ID */}
             <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
               <div className="flex items-center justify-between mb-3">
                 <p className="text-sm font-semibold text-gray-800">Membership Fee <span className="text-red-500">*</span></p>
                 <p className="text-xl font-bold text-blue-700">₹{AMOUNT}</p>
               </div>
               <p className="text-xs text-gray-500 mb-3">
-                Open <strong>PhonePe / GPay</strong> → Scan QR → scan the code below to pay ₹{AMOUNT}. Then enter your Transaction ID.
+                Open <strong>PhonePe / GPay</strong> → Send Money → enter the UPI ID below → pay ₹{AMOUNT}. Then enter your Transaction ID.
               </p>
-
-              {/* QR Code */}
-              <div className="flex flex-col items-center bg-white border border-blue-100 rounded-xl p-4 mb-4">
-                <QRCodeSVG value={UPI_LINK} size={180} bgColor="#ffffff" fgColor="#1e3a5f" level="M" />
-                <p className="text-xs text-gray-400 mt-2">Scan with PhonePe / GPay / any UPI app</p>
-              </div>
-
-              {/* UPI ID copy */}
               <div className="flex items-center justify-between bg-white border border-blue-100 rounded-lg px-3 py-2">
                 <div>
                   <p className="text-[10px] text-gray-400">UPI ID</p>
