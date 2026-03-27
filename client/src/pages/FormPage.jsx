@@ -220,7 +220,7 @@ export default function FormPage() {
                 onChange={handleChange} placeholder="e.g., B.Com, B.Sc, M.A."
                 className={`field-input ${errors.educationQualifications ? 'field-input-error' : ''}`} />
             </F>
-            <F label="Residence Address" required error={errors.residenceAddress}>
+            <F label="Residence Address" error={errors.residenceAddress}>
               <textarea name="residenceAddress" value={form.residenceAddress} onChange={handleChange}
                 rows={3} placeholder="Door No., Street, Area, District, PIN Code"
                 className={`field-input resize-none ${errors.residenceAddress ? 'field-input-error' : ''}`} />
