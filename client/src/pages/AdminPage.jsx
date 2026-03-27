@@ -155,7 +155,7 @@ function StatusDropdown({ currentStatus, submissionId, onUpdated }) {
 }
 
 // ── Mobile Card ───────────────────────────────────────────────────────────────
-function MobileCard({ sub, idx, expanded, onToggle, onStatusUpdated, onViewImage }) {
+function MobileCard({ sub, idx, expanded, onToggle, onStatusUpdated, onViewImage, onDelete }) {
   return (
     <div className="p-3 border-b border-gray-100 last:border-0">
       <div className="flex items-start justify-between gap-2 mb-1.5">
@@ -186,6 +186,8 @@ function MobileCard({ sub, idx, expanded, onToggle, onStatusUpdated, onViewImage
           <button onClick={onToggle} className="text-xs text-blue-600 underline">
             {expanded ? 'Less ▲' : 'More ▼'}
           </button>
+          <button onClick={() => onDelete(sub._id, sub.name)}
+            className="text-xs text-red-500 underline">Delete</button>
         </div>
       </div>
 
@@ -258,16 +260,36 @@ export default function AdminPage() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const downloadExcel = () => {
-    const p = new URLSearchParams();
-    if (filterStatus !== 'All') p.set('status',    filterStatus);
-    if (filterStartDate)        p.set('startDate', filterStartDate);
-    if (filterEndDate)          p.set('endDate',   filterEndDate);
-    window.open(`${API_BASE}/api/admin/download-excel?${p}`, '_blank');
+  const downloadExcel = async () => {
+    try {
+      const p = new URLSearchParams();
+      if (filterStatus !== 'All') p.set('status',    filterStatus);
+      if (filterStartDate)        p.set('startDate', filterStartDate);
+      if (filterEndDate)          p.set('endDate',   filterEndDate);
+      const res = await api.get(`/api/admin/download-excel?${p}`, { responseType: 'blob' });
+      const url  = URL.createObjectURL(new Blob([res.data]));
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = `association-data-${new Date().toISOString().split('T')[0]}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      alert('Failed to download Excel. Please try again.');
+    }
   };
 
   const handleStatusUpdated = useCallback((id, status) => {
     setSubmissions(prev => prev.map(s => s._id === id ? { ...s, paymentStatus: status, manualOverride: true } : s));
+  }, []);
+
+  const handleDelete = useCallback(async (id, name) => {
+    if (!window.confirm(`Delete submission by "${name}"? This cannot be undone.`)) return;
+    try {
+      await api.delete(`/api/admin/submissions/${id}`);
+      setSubmissions(prev => prev.filter(s => s._id !== id));
+    } catch {
+      alert('Failed to delete submission.');
+    }
   }, []);
 
   const displayed = submissions.filter(s => {
@@ -463,7 +485,8 @@ export default function AdminPage() {
                     expanded={expandedId === sub._id}
                     onToggle={() => setExpandedId(id => id === sub._id ? null : sub._id)}
                     onStatusUpdated={handleStatusUpdated}
-                    onViewImage={setImgModal} />
+                    onViewImage={setImgModal}
+                    onDelete={handleDelete} />
                 ))}
               </div>
 
@@ -474,7 +497,7 @@ export default function AdminPage() {
                     <tr className="bg-gray-50 border-b border-gray-200 text-left">
                       {['#','Name',"Parent's Name",'Mobile','Religion / Caste','Marital Status',
                         'Designation','Division / Circle','Education','Address',
-                        'Amount (₹)','Status','Screenshot','Date',''].map(h => (
+                        'Amount (₹)','Status','Screenshot','Date','',''].map(h => (
                         <th key={h} className="px-3 py-2.5 text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">{h}</th>
                       ))}
                     </tr>
@@ -515,6 +538,12 @@ export default function AdminPage() {
                               fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                             </svg>
+                          </td>
+                          <td className="px-3 py-2.5" onClick={e => e.stopPropagation()}>
+                            <button onClick={() => handleDelete(sub._id, sub.name)}
+                              className="text-xs text-red-500 hover:text-red-700 font-medium underline">
+                              Delete
+                            </button>
                           </td>
                         </tr>
                         {expandedId === sub._id && (

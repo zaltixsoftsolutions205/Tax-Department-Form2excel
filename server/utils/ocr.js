@@ -2,7 +2,7 @@ const { createWorker } = require('tesseract.js');
 
 // Expected amount is fetched dynamically from DB at submission time (passed as arg)
 // Fallback used only in standalone tests
-const DEFAULT_EXPECTED = parseInt(process.env.EXPECTED_AMOUNT || '1', 10);
+const DEFAULT_EXPECTED = parseInt(process.env.EXPECTED_AMOUNT || '1000', 10);
 
 // Account number to verify in screenshot
 const ACCOUNT_NO = process.env.ACCOUNT_NO || '081710100101759';
@@ -171,22 +171,19 @@ function parseNum(str) {
 /**
  * Determines payment status from screenshot OCR.
  * Rules:
- *   - No screenshot                                       → Unpaid
- *   - Screenshot + (account OR UPI ID found) + amount OK → Paid
- *   - Screenshot but recipient not found or wrong amount  → Unpaid
- *
- * @param {string|null} screenshotPath
- * @param {number|null} amount         - extracted by OCR
- * @param {number}      expectedAmount - from DB settings
- * @param {string}      ocrText        - full OCR text for account/UPI check
+ *   - No amount found in screenshot  → Invalid Screenshot (irrelevant image)
+ *   - Amount found = expectedAmount  → Paid
+ *   - Amount found ≠ expectedAmount  → Unpaid
  */
 function determinePaymentStatus(screenshotPath, amount, expectedAmount = DEFAULT_EXPECTED, ocrText = '') {
-  if (!screenshotPath)  return { status: 'Unpaid', amount: null };
-  const recipientFound = checkAccountInText(ocrText) || checkUpiInText(ocrText);
-  const amountOk       = amount !== null && amount >= expectedAmount;
-  console.log(`[OCR] recipientFound=${recipientFound} amountOk=${amountOk} amount=${amount} expected=${expectedAmount}`);
-  if (recipientFound && amountOk) return { status: 'Paid',   amount };
-  return                                 { status: 'Unpaid', amount };
+  if (amount === null || amount === undefined) {
+    console.log(`[OCR] No amount found — Invalid Screenshot`);
+    return { status: 'Invalid Screenshot', amount: null };
+  }
+  const amountOk = amount >= expectedAmount;
+  console.log(`[OCR] amount=${amount} expected=${expectedAmount} amountOk=${amountOk}`);
+  if (amountOk) return { status: 'Paid',   amount };
+  return               { status: 'Unpaid', amount };
 }
 
 module.exports = { extractTextFromImage, determinePaymentStatus, extractPaymentAmount };
