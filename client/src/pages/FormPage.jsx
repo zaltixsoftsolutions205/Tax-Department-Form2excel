@@ -1,13 +1,14 @@
 import { useState, useRef, useCallback } from 'react';
+import QRCode from 'react-qr-code';
 import api from '../api';
 
-const AMOUNT  = 500;
+const AMOUNT   = 500;
 const UPI_ID   = import.meta.env.VITE_UPI_ID   || 'aguru79621@ybl';
 const UPI_NAME = import.meta.env.VITE_UPI_NAME || 'Union Bank';
 
-// UPI deep link — opens PhonePe / GPay / Paytm with UPI ID pre-filled
-// Amount is NOT passed (some UPI apps block deep links with fixed amount)
-const UPI_LINK = `upi://pay?pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent(UPI_NAME)}&cu=INR&tn=${encodeURIComponent('Membership Fee')}`;
+// QR code value — scanned from inside PhonePe / GPay / Paytm
+// Fixed amount ₹500 works via QR (only browser deep links are blocked)
+const UPI_QR = `upi://pay?pa=${encodeURIComponent(UPI_ID)}&pn=${encodeURIComponent(UPI_NAME)}&am=${AMOUNT}&cu=INR&tn=${encodeURIComponent('Membership Fee')}`;
 
 const INITIAL = {
   name: '', parentsName: '', religion: '', caste: '',
@@ -53,10 +54,6 @@ export default function FormPage() {
     if (fileRef.current) fileRef.current.value = '';
   };
 
-  const handlePayClick = () => {
-    setPaymentAttempted(true);
-    window.location.href = UPI_LINK;
-  };
 
   const validate = () => {
     const e = {};
@@ -215,51 +212,33 @@ export default function FormPage() {
           <SectionHeader icon="💳" title="Payment" />
           <div className="px-3 md:px-6 py-3 md:py-5 space-y-4">
 
-            {/* UPI Pay Button */}
+            {/* QR Code Payment */}
             <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
               <div className="flex items-center justify-between mb-3">
                 <p className="text-sm font-semibold text-gray-800">Membership Fee</p>
                 <p className="text-2xl font-bold text-blue-700">₹{AMOUNT}</p>
               </div>
 
-              {/* UPI ID display */}
-              <div className="bg-white border border-blue-200 rounded-xl px-4 py-3 mb-4 flex items-center justify-between gap-3">
+              <p className="text-xs text-gray-500 mb-4">
+                Open <strong>PhonePe / GPay / Paytm</strong>, tap <strong>Scan QR</strong>, and scan the code below to pay <strong>₹{AMOUNT}</strong> directly.
+              </p>
+
+              {/* QR Code */}
+              <div className="flex flex-col items-center bg-white border border-blue-100 rounded-xl p-4 mb-4">
+                <QRCode value={UPI_QR} size={180} />
+                <p className="text-xs text-gray-400 mt-3">Scan with any UPI app</p>
+              </div>
+
+              {/* UPI ID fallback */}
+              <p className="text-xs text-gray-500 mb-2">Or pay manually using UPI ID:</p>
+              <div className="bg-white border border-blue-200 rounded-xl px-4 py-3 flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-[10px] text-gray-400 mb-0.5 uppercase tracking-wide">Pay to UPI ID</p>
-                  <p className="text-base font-bold text-gray-800 tracking-wide">{UPI_ID}</p>
+                  <p className="text-[10px] text-gray-400 mb-0.5 uppercase tracking-wide">UPI ID</p>
+                  <p className="text-sm font-bold text-gray-800 tracking-wide">{UPI_ID}</p>
                 </div>
                 <CopyButton text={UPI_ID} />
               </div>
-
-              <p className="text-xs text-gray-500 mb-3">
-                Tap <strong>Pay ₹{AMOUNT}</strong> — your UPI app opens with the ID ready.
-                Enter <strong>₹{AMOUNT}</strong> as the amount, complete the payment, then come back and enter your Transaction ID below.
-              </p>
-
-              <button
-                type="button"
-                onClick={handlePayClick}
-                className="w-full bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-colors shadow-sm text-base"
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                </svg>
-                Pay ₹{AMOUNT}
-              </button>
             </div>
-
-            {/* After-payment guidance */}
-            {paymentAttempted && (
-              <div className="bg-green-50 border border-green-200 rounded-xl p-3 flex items-start gap-2">
-                <svg className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <p className="text-sm text-green-800">
-                  After completing payment, please return and submit the form with your Transaction ID below.
-                </p>
-              </div>
-            )}
 
             {/* Transaction ID */}
             <F label="Transaction ID / UTR Number" error={errors.transactionId}>
