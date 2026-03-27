@@ -85,26 +85,14 @@ router.post(
         educationQualifications, residenceAddress, interests,
       } = req.body;
 
-      // ── Payment status via OCR ────────────────────────────────────────────
-      // Upload screenshot → OCR reads it → finds account no. + amount → Paid
-      // No screenshot or details not found → Unpaid
-      let paymentStatus     = 'Unpaid';
+      // ── Save immediately with Pending status ─────────────────────────────
       let screenshotRelPath = null;
-      let extractedAmount   = null;
-      let ocrText           = '';
 
       if (req.file) {
         screenshotRelPath = path.relative(
           path.join(__dirname, '..'),
           req.file.path
         ).replace(/\\/g, '/');
-
-        const { text, amount } = await extractTextFromImage(req.file.path);
-        ocrText         = text;
-        const expected  = await getExpectedAmount();
-        const result    = determinePaymentStatus(screenshotRelPath, amount, expected, text);
-        paymentStatus   = result.status;
-        extractedAmount = result.amount;
       }
 
       const submission = new Submission({
@@ -121,25 +109,46 @@ router.post(
         residenceAddress:        residenceAddress       || '',
         interests:               interests              || '',
         paymentScreenshot:       screenshotRelPath,
-        paymentStatus,
-        extractedAmount,
-        ocrText,
+        paymentStatus:           screenshotRelPath ? 'Pending' : 'Unpaid',
       });
 
       await submission.save();
 
-      // ── Send SMS notification ─────────────────────────────────────────────
-      const smsMessage = paymentStatus === 'Paid'
-        ? `Dear ${name}, you have been successfully registered with Commercial Taxes SC & ST Employees Association. Your payment of Rs.1 has been verified. Welcome!`
-        : `Dear ${name}, your registration with Commercial Taxes SC & ST Employees Association has been received. Please complete your payment of Rs.1 to activate your membership.`;
-
-      sendSMS(mobile, smsMessage).catch(() => {}); // fire and forget
-
-      return res.status(201).json({
+      // ── Respond immediately so user doesn't wait ──────────────────────────
+      res.status(201).json({
         success:       true,
         message:       'Form submitted successfully!',
-        paymentStatus,
+        paymentStatus: submission.paymentStatus,
       });
+
+      // ── Run OCR + SMS in background after response is sent ────────────────
+      if (req.file) {
+        (async () => {
+          try {
+            const { text, amount } = await extractTextFromImage(req.file.path);
+            const expected         = await getExpectedAmount();
+            const result           = determinePaymentStatus(screenshotRelPath, amount, expected, text);
+
+            await submission.updateOne({
+              paymentStatus:   result.status,
+              extractedAmount: result.amount,
+              ocrText:         text,
+            });
+
+            const smsMessage = result.status === 'Paid'
+              ? `Dear ${name}, you have been successfully registered with Commercial Taxes SC & ST Employees Association. Your payment has been verified. Welcome!`
+              : `Dear ${name}, your registration with Commercial Taxes SC & ST Employees Association has been received. Please complete your payment to activate your membership.`;
+
+            await sendSMS(mobile, smsMessage);
+          } catch (err) {
+            console.error('Background OCR/SMS error:', err.message);
+          }
+        })();
+      } else {
+        // No screenshot — send registration received SMS immediately
+        const smsMessage = `Dear ${name}, your registration with Commercial Taxes SC & ST Employees Association has been received. Please complete your payment to activate your membership.`;
+        sendSMS(mobile, smsMessage).catch(() => {});
+      }
     } catch (error) {
       console.error('Submit form error:', error);
       return res.status(500).json({
