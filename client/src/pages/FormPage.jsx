@@ -25,7 +25,6 @@ export default function FormPage() {
 
   const handlePayNow = () => {
     setPaymentAttempted(true);
-    window.location.href = PHONEPE_LINK;
   };
 
   const handleChange = useCallback((e) => {
@@ -224,13 +223,15 @@ export default function FormPage() {
               {errors.payment && (
                 <p className="text-xs text-red-600 font-medium mb-2">⚠ {errors.payment}</p>
               )}
-              <button type="button" onClick={handlePayNow}
+              <a
+                href={PHONEPE_LINK}
+                onClick={handlePayNow}
                 className="w-full flex items-center justify-center gap-2 bg-[#5f259f] hover:bg-[#4e1d83] active:bg-[#3d1666] text-white font-semibold text-sm py-3 rounded-lg transition-colors shadow-md">
-                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                 </svg>
                 Pay ₹{AMOUNT} via PhonePe
-              </button>
+              </a>
               {paymentAttempted && (
                 <div className="mt-3 flex items-start gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
                   <svg className="w-4 h-4 text-green-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
