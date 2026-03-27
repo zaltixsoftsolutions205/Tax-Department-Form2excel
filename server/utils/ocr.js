@@ -176,9 +176,8 @@ function determinePaymentStatus(screenshotPath, amount, expectedAmount = DEFAULT
   if (!screenshotPath)                          return { status: 'Unpaid',  amount: null };
   const accountFound = checkAccountInText(ocrText);
   const amountOk     = amount !== null && amount >= expectedAmount;
-  if (accountFound && amountOk)                 return { status: 'Paid',    amount };
-  if (amountOk)                                 return { status: 'Pending', amount };
-  return                                               { status: 'Unpaid',  amount };
+  if (amountOk)                                 return { status: 'Paid',   amount };
+  return                                               { status: 'Unpaid', amount };
 }
 
 module.exports = { extractTextFromImage, determinePaymentStatus, extractPaymentAmount };
