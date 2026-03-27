@@ -15,17 +15,23 @@ const submissionSchema = new mongoose.Schema(
       trim: true,
       maxlength: [100, "Parent's name cannot exceed 100 characters"],
     },
+    mobile: {
+      type: String,
+      required: [true, 'Mobile number is required'],
+      trim: true,
+      match: [/^[6-9]\d{9}$/, 'Invalid mobile number'],
+    },
     religion: {
       type: String,
-      required: [true, 'Religion is required'],
       trim: true,
       maxlength: [50, 'Religion cannot exceed 50 characters'],
+      default: '',
     },
     caste: {
       type: String,
-      required: [true, 'Caste is required'],
       trim: true,
       maxlength: [50, 'Caste cannot exceed 50 characters'],
+      default: '',
     },
     maritalStatus: {
       type: String,

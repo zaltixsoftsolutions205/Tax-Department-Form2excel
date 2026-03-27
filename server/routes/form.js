@@ -8,6 +8,7 @@ const upload       = require('../middleware/upload');
 const Submission   = require('../models/Submission');
 const { extractTextFromImage, determinePaymentStatus } = require('../utils/ocr');
 const { getExpectedAmount } = require('../models/Settings');
+const { sendSMS }  = require('../utils/sms');
 
 // ── Validation rules ──────────────────────────────────────────────────────────
 const formValidation = [
@@ -20,14 +21,6 @@ const formValidation = [
     .trim().notEmpty().withMessage("Parent's name is required")
     .isLength({ max: 100 }).withMessage("Parent's name must be under 100 characters")
     .escape(),
-
-  body('religion')
-    .trim().notEmpty().withMessage('Religion is required')
-    .isLength({ max: 50 }).escape(),
-
-  body('caste')
-    .trim().notEmpty().withMessage('Caste is required')
-    .isLength({ max: 50 }).escape(),
 
   body('maritalStatus')
     .isIn(['Married', 'Unmarried'])
@@ -45,9 +38,13 @@ const formValidation = [
     .trim().notEmpty().withMessage('Residence address is required')
     .isLength({ max: 500 }).escape(),
 
+  body('mobile')
+    .trim().notEmpty().withMessage('Mobile number is required')
+    .matches(/^[6-9]\d{9}$/).withMessage('Enter a valid 10-digit mobile number'),
+
+  body('religion').optional().trim().isLength({ max: 50 }).escape(),
+  body('caste').optional().trim().isLength({ max: 50 }).escape(),
   body('interests').optional().trim().isLength({ max: 300 }).escape(),
-  body('transactionId').optional().trim().isLength({ max: 100 }).escape(),
-  body('paymentAttempted').optional().isBoolean(),
 ];
 
 // ── POST /api/submit-form ─────────────────────────────────────────────────────
@@ -83,7 +80,7 @@ router.post(
 
     try {
       const {
-        name, parentsName, religion, caste, maritalStatus,
+        name, parentsName, mobile, religion, caste, maritalStatus,
         designation, division, circle,
         educationQualifications, residenceAddress, interests,
       } = req.body;
@@ -113,14 +110,15 @@ router.post(
       const submission = new Submission({
         name,
         parentsName,
-        religion,
-        caste,
+        mobile,
+        religion:                religion               || '',
+        caste:                   caste                  || '',
         maritalStatus,
         designation:             designation            || '',
         division:                division               || '',
         circle:                  circle                 || '',
         educationQualifications,
-        residenceAddress,
+        residenceAddress:        residenceAddress       || '',
         interests:               interests              || '',
         paymentScreenshot:       screenshotRelPath,
         paymentStatus,
@@ -129,6 +127,13 @@ router.post(
       });
 
       await submission.save();
+
+      // ── Send SMS notification ─────────────────────────────────────────────
+      const smsMessage = paymentStatus === 'Paid'
+        ? `Dear ${name}, you have been successfully registered with Commercial Taxes SC & ST Employees Association. Your payment of Rs.1000 has been verified. Welcome!`
+        : `Dear ${name}, your registration with Commercial Taxes SC & ST Employees Association has been received. Please complete your payment of Rs.1000 to activate your membership.`;
+
+      sendSMS(mobile, smsMessage).catch(() => {}); // fire and forget
 
       return res.status(201).json({
         success:       true,

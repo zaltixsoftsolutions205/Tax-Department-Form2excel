@@ -9,9 +9,10 @@ const BRANCH       = 'Kalakada';
 const AMOUNT       = 1000;
 
 const INITIAL = {
-  name: '', parentsName: '', religion: '', caste: '',
-  maritalStatus: '', designation: '', division: '', circle: '',
+  name: '', parentsName: '', mobile: '', maritalStatus: '',
+  designation: '', division: '', circle: '',
   educationQualifications: '', residenceAddress: '', interests: '',
+  religion: '', caste: '',
 };
 
 export default function FormPage() {
@@ -55,11 +56,10 @@ export default function FormPage() {
     const e = {};
     if (!form.name.trim())                    e.name = 'Required';
     if (!form.parentsName.trim())             e.parentsName = 'Required';
-    if (!form.religion.trim())                e.religion = 'Required';
-    if (!form.caste.trim())                   e.caste = 'Required';
+    if (!form.mobile.trim())                  e.mobile = 'Required';
+    else if (!/^[6-9]\d{9}$/.test(form.mobile.trim())) e.mobile = 'Enter a valid 10-digit mobile number';
     if (!form.maritalStatus)                  e.maritalStatus = 'Required';
     if (!form.educationQualifications.trim()) e.educationQualifications = 'Required';
-    if (!form.residenceAddress.trim())        e.residenceAddress = 'Required';
     return e;
   };
 
@@ -145,23 +145,26 @@ export default function FormPage() {
                 placeholder="Father's / Mother's name"
                 className={`field-input ${errors.parentsName ? 'field-input-error' : ''}`} />
             </F>
-            <F label="Religion" required error={errors.religion}>
-              <input type="text" name="religion" value={form.religion} onChange={handleChange}
-                placeholder="e.g., Hindu, Muslim, Christian"
-                className={`field-input ${errors.religion ? 'field-input-error' : ''}`} />
+            <F label="Mobile Number" required error={errors.mobile}>
+              <input type="tel" name="mobile" value={form.mobile} onChange={handleChange}
+                placeholder="10-digit mobile number" maxLength={10}
+                className={`field-input ${errors.mobile ? 'field-input-error' : ''}`} />
             </F>
-            <F label="Caste" required error={errors.caste}>
-              <input type="text" name="caste" value={form.caste} onChange={handleChange}
-                placeholder="Enter your caste"
-                className={`field-input ${errors.caste ? 'field-input-error' : ''}`} />
-            </F>
-            <F label="Marital Status" required error={errors.maritalStatus} className="md:col-span-2">
+            <F label="Marital Status" required error={errors.maritalStatus}>
               <select name="maritalStatus" value={form.maritalStatus} onChange={handleChange}
                 className={`field-input ${errors.maritalStatus ? 'field-input-error' : ''}`}>
                 <option value="">-- Select --</option>
                 <option>Married</option>
                 <option>Unmarried</option>
               </select>
+            </F>
+            <F label="Religion" error={errors.religion}>
+              <input type="text" name="religion" value={form.religion} onChange={handleChange}
+                placeholder="e.g., Hindu, Muslim, Christian" className="field-input" />
+            </F>
+            <F label="Caste" error={errors.caste}>
+              <input type="text" name="caste" value={form.caste} onChange={handleChange}
+                placeholder="Enter your caste" className="field-input" />
             </F>
           </div>
 
