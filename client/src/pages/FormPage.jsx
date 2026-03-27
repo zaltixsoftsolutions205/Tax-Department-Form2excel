@@ -24,6 +24,7 @@ export default function FormPage() {
   const [submitted,        setSubmitted]        = useState(false);
   const [serverMsg,        setServerMsg]        = useState('');
   const [paymentAttempted, setPaymentAttempted] = useState(false);
+  const [showPayModal,     setShowPayModal]     = useState(false);
   const fileRef = useRef(null);
 
   const handleChange = useCallback((e) => {
@@ -210,41 +211,71 @@ export default function FormPage() {
           <SectionHeader icon="💳" title="Payment" />
           <div className="px-3 md:px-6 py-3 md:py-5 space-y-4">
 
-            {/* Bank Account Details */}
-            <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-gray-800">Pay Membership Fee</p>
-                <p className="text-2xl font-bold text-blue-700">₹{AMOUNT}</p>
+            {/* Pay Button */}
+            <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-gray-800">Membership Fee</p>
+                <p className="text-xs text-gray-500 mt-0.5">Tap to view payment details</p>
               </div>
-
-              <p className="text-xs text-gray-500">
-                Transfer <strong>₹{AMOUNT}</strong> to the bank account below using
-                Net Banking, PhonePe, GPay, or any UPI app
-                (Bank Transfer / Pay to Account Number).
-              </p>
-
-              {/* Account details rows */}
-              <div className="bg-white border border-blue-100 rounded-xl divide-y divide-gray-100 overflow-hidden">
-                <AccountRow label="Account Holder" value={ACCOUNT_NAME} />
-                <AccountRow label="Account Number" value={ACCOUNT_NO} copyable />
-                <AccountRow label="Bank"           value={BANK_NAME} />
-                <AccountRow label="IFSC Code"      value={IFSC} copyable />
-                <AccountRow label="Branch"         value={BRANCH} />
-              </div>
-
-              {/* How to pay steps */}
-              <div className="bg-yellow-50 border border-yellow-100 rounded-xl p-3">
-                <p className="text-xs font-semibold text-yellow-800 mb-1.5">How to pay via PhonePe / GPay:</p>
-                <ol className="text-xs text-yellow-700 space-y-1 list-decimal list-inside">
-                  <li>Open PhonePe or GPay</li>
-                  <li>Tap <strong>Bank Transfer</strong> or <strong>Pay to Account</strong></li>
-                  <li>Enter Account Number and IFSC above</li>
-                  <li>Enter amount <strong>₹{AMOUNT}</strong> and pay</li>
-                  <li>Note the <strong>Transaction / UTR ID</strong> from the receipt</li>
-                  <li>Enter it below and submit this form</li>
-                </ol>
-              </div>
+              <button
+                type="button"
+                onClick={() => { setShowPayModal(true); setPaymentAttempted(true); }}
+                className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white font-bold py-3 px-6 rounded-xl text-base transition-colors shadow-sm"
+              >
+                Pay ₹{AMOUNT}
+              </button>
             </div>
+
+            {/* Payment Modal */}
+            {showPayModal && (
+              <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/50"
+                onClick={() => setShowPayModal(false)}>
+                <div className="bg-white w-full md:max-w-sm rounded-t-2xl md:rounded-2xl shadow-2xl overflow-hidden"
+                  onClick={e => e.stopPropagation()}>
+
+                  {/* Modal Header */}
+                  <div className="bg-gradient-to-r from-blue-900 to-blue-700 px-5 py-4 flex items-center justify-between">
+                    <div>
+                      <p className="text-white font-bold text-base">Pay Membership Fee</p>
+                      <p className="text-blue-200 text-xs mt-0.5">Transfer to bank account below</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-white font-bold text-2xl">₹{AMOUNT}</p>
+                    </div>
+                  </div>
+
+                  {/* Account Details */}
+                  <div className="divide-y divide-gray-100">
+                    <AccountRow label="Account Holder" value={ACCOUNT_NAME} />
+                    <AccountRow label="Account Number" value={ACCOUNT_NO} copyable />
+                    <AccountRow label="Bank Name"      value={BANK_NAME} />
+                    <AccountRow label="IFSC Code"      value={IFSC} copyable />
+                    <AccountRow label="Branch"         value={BRANCH} />
+                    <AccountRow label="Amount"         value={`₹${AMOUNT}`} copyable copyValue={String(AMOUNT)} />
+                  </div>
+
+                  {/* Steps */}
+                  <div className="px-4 py-3 bg-yellow-50 border-t border-yellow-100">
+                    <p className="text-xs font-semibold text-yellow-800 mb-1">Steps to pay:</p>
+                    <ol className="text-xs text-yellow-700 space-y-0.5 list-decimal list-inside">
+                      <li>Open PhonePe / GPay / Paytm</li>
+                      <li>Tap <strong>Bank Transfer</strong> or <strong>Pay to Account</strong></li>
+                      <li>Enter Account Number + IFSC (tap Copy above)</li>
+                      <li>Enter ₹{AMOUNT} and confirm payment</li>
+                      <li>Note your <strong>Transaction / UTR ID</strong></li>
+                    </ol>
+                  </div>
+
+                  {/* Done button */}
+                  <div className="px-4 py-3 border-t border-gray-100">
+                    <button type="button" onClick={() => setShowPayModal(false)}
+                      className="w-full bg-blue-700 hover:bg-blue-800 text-white font-semibold py-3 rounded-xl text-sm">
+                      Done — Enter Transaction ID below
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Transaction ID */}
             <F label="Transaction / UTR Number" error={errors.transactionId}>
@@ -343,14 +374,14 @@ function F({ label, required, error, children, className = '' }) {
   );
 }
 
-function AccountRow({ label, value, copyable }) {
+function AccountRow({ label, value, copyable, copyValue }) {
   return (
-    <div className="flex items-center justify-between px-4 py-2.5 gap-3">
+    <div className="flex items-center justify-between px-4 py-3 gap-3">
       <div className="min-w-0">
         <p className="text-[10px] text-gray-400 uppercase tracking-wide">{label}</p>
         <p className="text-sm font-semibold text-gray-800 break-all">{value}</p>
       </div>
-      {copyable && <CopyButton text={value} />}
+      {copyable && <CopyButton text={copyValue ?? value} />}
     </div>
   );
 }
