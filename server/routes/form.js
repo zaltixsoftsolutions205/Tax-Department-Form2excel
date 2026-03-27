@@ -99,7 +99,8 @@ router.post(
       let screenshotRelPath = null;
 
       if (txnId) {
-        paymentStatus = 'Paid';
+        // Mark for admin to verify against UPI history before confirming as Paid
+        paymentStatus = 'Paid (Verification Required)';
       }
 
       // Store screenshot if uploaded (for admin reference)

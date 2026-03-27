@@ -74,8 +74,8 @@ export default function FormPage() {
       });
       setSubmitted(true);
       setServerMsg(
-        data.paymentStatus === 'Paid'
-          ? 'Thank you! Your payment has been recorded. Welcome to the Association.'
+        data.paymentStatus === 'Paid (Verification Required)'
+          ? 'Form submitted! Your payment will be verified by the admin shortly.'
           : 'Form submitted. Please complete the payment to activate your membership.'
       );
     } catch (err) {
