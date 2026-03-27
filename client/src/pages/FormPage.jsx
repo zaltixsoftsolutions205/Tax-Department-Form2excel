@@ -37,13 +37,34 @@ export default function FormPage() {
     if (!['image/jpeg', 'image/jpg', 'image/png'].includes(f.type)) {
       setErrors(p => ({ ...p, file: 'Only JPEG / PNG allowed.' })); return;
     }
-    if (f.size > 2 * 1024 * 1024) {
-      setErrors(p => ({ ...p, file: 'Max file size is 2 MB.' })); return;
-    }
-    setFile(f); setErrors(p => ({ ...p, file: '' }));
-    const r = new FileReader();
-    r.onloadend = () => setPreview(r.result);
-    r.readAsDataURL(f);
+    setErrors(p => ({ ...p, file: '' }));
+
+    // Compress image before uploading — resize to max 900px, 70% quality
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const img = new Image();
+      img.onload = () => {
+        const MAX = 900;
+        let w = img.width, h = img.height;
+        if (w > MAX || h > MAX) {
+          if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+          else        { w = Math.round(w * MAX / h); h = MAX; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        canvas.toBlob(
+          (blob) => {
+            const compressed = new File([blob], f.name, { type: 'image/jpeg' });
+            setFile(compressed);
+            setPreview(canvas.toDataURL('image/jpeg', 0.7));
+          },
+          'image/jpeg', 0.7
+        );
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(f);
   }, []);
 
   const removeFile = () => {
