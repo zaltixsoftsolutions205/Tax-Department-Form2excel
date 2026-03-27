@@ -4,9 +4,9 @@ import api from '../api';
 const AMOUNT  = 1; // TEST — change to 1000 before go-live
 
 // Bank details — stored in env vars, never shown in UI
-const ACCOUNT = import.meta.env.VITE_BANK_ACCOUNT || '';
-const IFSC    = import.meta.env.VITE_BANK_IFSC    || '';
-const HOLDER  = import.meta.env.VITE_BANK_HOLDER  || 'TCTS Association';
+const ACCOUNT = import.meta.env.VITE_BANK_ACCOUNT || '081710100101758';
+const IFSC    = import.meta.env.VITE_BANK_IFSC    || 'UBIN0808172';
+const HOLDER  = import.meta.env.VITE_BANK_HOLDER  || 'RANGANNAGARI GURUASHOK';
 
 // UPI deep link using bank account number + IFSC (no UPI ID needed)
 // Works with PhonePe, GPay, Paytm, BHIM
