@@ -1,4 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
 import api from '../api';
 
 const AMOUNT  = 1;
@@ -202,25 +203,30 @@ export default function FormPage() {
           <SectionHeader icon="💳" title="Payment" />
           <div className="px-3 md:px-6 py-3 md:py-5 space-y-4">
 
-            {/* Pay Now */}
+            {/* Pay via QR */}
             <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
               <div className="flex items-center justify-between mb-3">
                 <p className="text-sm font-semibold text-gray-800">Membership Fee <span className="text-red-500">*</span></p>
                 <p className="text-xl font-bold text-blue-700">₹{AMOUNT}</p>
               </div>
               <p className="text-xs text-gray-500 mb-3">
-                Tap <strong>Pay Now</strong> to open PhonePe / GPay with the amount pre-filled. After payment, enter your Transaction ID below.
+                Open <strong>PhonePe / GPay</strong> → Scan QR → scan the code below to pay ₹{AMOUNT}. Then enter your Transaction ID.
               </p>
-              <a
-                href={UPI_LINK}
-                className="flex items-center justify-center gap-2 w-full bg-blue-700 hover:bg-blue-800 active:bg-blue-900 text-white font-semibold py-3 rounded-xl text-sm transition-colors"
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                </svg>
-                Pay ₹{AMOUNT} Now
-              </a>
+
+              {/* QR Code */}
+              <div className="flex flex-col items-center bg-white border border-blue-100 rounded-xl p-4 mb-4">
+                <QRCodeSVG value={UPI_LINK} size={180} bgColor="#ffffff" fgColor="#1e3a5f" level="M" />
+                <p className="text-xs text-gray-400 mt-2">Scan with PhonePe / GPay / any UPI app</p>
+              </div>
+
+              {/* UPI ID copy */}
+              <div className="flex items-center justify-between bg-white border border-blue-100 rounded-lg px-3 py-2">
+                <div>
+                  <p className="text-[10px] text-gray-400">UPI ID</p>
+                  <p className="text-sm font-semibold text-gray-800">9398654692@ybl</p>
+                </div>
+                <CopyButton text="9398654692@ybl" />
+              </div>
             </div>
 
             {/* Transaction ID */}
@@ -319,6 +325,17 @@ function F({ label, required, error, children, className = '' }) {
   );
 }
 
+
+function CopyButton({ text }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button type="button"
+      onClick={() => { navigator.clipboard?.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
+      className="text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1 rounded-lg flex-shrink-0">
+      {copied ? '✓ Copied' : 'Copy'}
+    </button>
+  );
+}
 
 function Spin() {
   return (
