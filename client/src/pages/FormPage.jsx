@@ -1,8 +1,9 @@
 import { useState, useRef, useCallback } from 'react';
 import api from '../api';
 
-// Set VITE_PHONEPE_LINK in Vercel env vars to your PhonePe/UPI payment link
-const PHONEPE_LINK = import.meta.env.VITE_PHONEPE_LINK || '#';
+// TEST UPI ID — replace with real UPI ID before go-live
+const PHONEPE_LINK = import.meta.env.VITE_PHONEPE_LINK ||
+  'upi://pay?pa=9398654692@ybl&pn=TCTS%20Association&am=1&cu=INR&tn=Test%20Payment';
 const AMOUNT = 1000;
 
 const INITIAL = {
