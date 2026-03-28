@@ -125,22 +125,56 @@ export default function FormPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-4 md:py-8 px-3 md:px-4">
 
       {/* Header */}
-      <div className="max-w-3xl mx-auto mb-4 md:mb-6">
-        <div className="bg-gradient-to-r from-blue-900 to-blue-700 rounded-xl p-4 md:p-6 text-white shadow-lg">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 md:w-14 md:h-14 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
-              <svg className="w-5 h-5 md:w-8 md:h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+      <div className="max-w-3xl mx-auto mb-4 md:mb-6 rounded-xl overflow-hidden shadow-lg border border-gray-200">
+
+        {/* Blue top section */}
+        <div className="bg-blue-800 text-white">
+          {/* Tagline row */}
+          <div className="flex justify-between items-center px-3 md:px-5 pt-2 pb-1 text-[10px] md:text-xs font-semibold text-yellow-300 italic">
+            <span>Educate !</span>
+            <span>Organise !!</span>
+            <span>Agitate !!!</span>
+          </div>
+
+          {/* Logo + Title */}
+          <div className="flex items-center gap-3 px-3 md:px-6 pb-3 md:pb-4">
+            {/* Placeholder circle for photo */}
+            <div className="w-14 h-14 md:w-20 md:h-20 rounded-full bg-white flex-shrink-0 overflow-hidden border-2 border-yellow-300 flex items-center justify-center">
+              <svg className="w-8 h-8 md:w-12 md:h-12 text-blue-800" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
               </svg>
             </div>
-            <div>
-              <h1 className="text-sm md:text-xl font-bold leading-tight">TELANGANA COMMERCIAL TAXES</h1>
-              <p className="text-blue-200 text-xs md:text-sm font-medium mt-0.5">S.C./S.T. EMPLOYEES ASSOCIATION</p>
-              <p className="text-blue-100 text-xs mt-0.5 hidden md:block">Member Registration Form</p>
+
+            {/* Title text */}
+            <div className="flex-1 text-center">
+              <h1 className="text-lg md:text-3xl font-extrabold leading-tight tracking-wide uppercase text-white drop-shadow">
+                Telangana Commercial Taxes
+              </h1>
+              <h2 className="text-base md:text-2xl font-extrabold leading-tight tracking-wide uppercase text-white drop-shadow">
+                S.C./S.T. Employees Association
+              </h2>
+              <p className="text-yellow-300 font-bold text-sm md:text-base mt-1">HYDERABAD</p>
+              <p className="text-yellow-200 text-xs md:text-sm">( Regd.No. 5045/1994 )</p>
             </div>
           </div>
         </div>
+
+        {/* Office bearers row */}
+        <div className="bg-white border-t-2 border-blue-800 grid grid-cols-2 md:grid-cols-4 divide-x divide-gray-200">
+          {[
+            { role: 'President',           name: 'K. BHEEKYA NAIK',  phone: '9440517955' },
+            { role: 'Associate President', name: 'M. VIJAY KUMAR',   phone: '7396102255' },
+            { role: 'Treasurer',           name: 'A. ANAND KUMAR',   phone: '9398774991' },
+            { role: 'General Secretary',   name: 'K. NAGENDER',      phone: '8790071900' },
+          ].map(({ role, name, phone }) => (
+            <div key={role} className="text-center py-2 px-1">
+              <p className="text-[9px] md:text-xs text-gray-500 font-medium">{role} :</p>
+              <p className="text-[10px] md:text-sm font-bold text-blue-800 leading-tight">{name}</p>
+              <p className="text-[9px] md:text-xs text-gray-500">{phone}</p>
+            </div>
+          ))}
+        </div>
+
       </div>
 
       {/* Card */}
