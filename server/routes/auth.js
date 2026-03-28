@@ -117,4 +117,35 @@ router.get('/me', authMiddleware, async (req, res) => {
   }
 });
 
+// ── POST /api/auth/change-password ───────────────────────────────────────────
+router.post(
+  '/change-password',
+  authMiddleware,
+  [
+    body('currentPassword').notEmpty().withMessage('Current password is required.'),
+    body('newPassword').isLength({ min: 6 }).withMessage('New password must be at least 6 characters.'),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty())
+      return res.status(400).json({ success: false, message: errors.array()[0].msg });
+
+    try {
+      const admin = await Admin.findById(req.adminId);
+      if (!admin) return res.status(404).json({ success: false, message: 'Admin not found.' });
+
+      const match = await admin.comparePassword(req.body.currentPassword);
+      if (!match)
+        return res.status(401).json({ success: false, message: 'Current password is incorrect.' });
+
+      admin.password = req.body.newPassword;
+      await admin.save();
+      res.json({ success: true, message: 'Password changed successfully.' });
+    } catch (err) {
+      console.error('Change password error:', err);
+      res.status(500).json({ success: false, message: 'Server error.' });
+    }
+  }
+);
+
 module.exports = router;

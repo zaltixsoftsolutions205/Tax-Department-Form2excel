@@ -19,6 +19,70 @@ const fmtDate = (iso) => new Date(iso).toLocaleString('en-IN', {
   day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
 });
 
+// ── Change Password ───────────────────────────────────────────────────────────
+function ChangePassword() {
+  const [open,    setOpen]    = useState(false);
+  const [cur,     setCur]     = useState('');
+  const [nw,      setNw]      = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [saving,  setSaving]  = useState(false);
+  const [msg,     setMsg]     = useState(null);
+
+  const save = async () => {
+    if (!cur || !nw || !confirm) { setMsg({ ok: false, text: 'All fields are required.' }); return; }
+    if (nw.length < 6)           { setMsg({ ok: false, text: 'New password must be at least 6 characters.' }); return; }
+    if (nw !== confirm)          { setMsg({ ok: false, text: 'New passwords do not match.' }); return; }
+    setSaving(true); setMsg(null);
+    try {
+      await api.post('/api/auth/change-password', { currentPassword: cur, newPassword: nw });
+      setMsg({ ok: true, text: 'Password changed successfully.' });
+      setCur(''); setNw(''); setConfirm('');
+      setTimeout(() => setOpen(false), 1500);
+    } catch (err) {
+      setMsg({ ok: false, text: err.response?.data?.message || 'Failed.' });
+    } finally { setSaving(false); }
+  };
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 md:p-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-xs md:text-sm font-semibold text-gray-700 uppercase tracking-wide">🔒 Change Password</h2>
+        <button onClick={() => { setOpen(o => !o); setMsg(null); }}
+          className="text-xs text-blue-600 underline">{open ? 'Cancel' : 'Change'}</button>
+      </div>
+      {open && (
+        <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-2">
+          <div>
+            <label className="field-label">Current Password</label>
+            <input type="password" value={cur} onChange={e => setCur(e.target.value)}
+              placeholder="Current password" className="field-input text-sm py-1.5" />
+          </div>
+          <div>
+            <label className="field-label">New Password</label>
+            <input type="password" value={nw} onChange={e => setNw(e.target.value)}
+              placeholder="Min. 6 characters" className="field-input text-sm py-1.5" />
+          </div>
+          <div>
+            <label className="field-label">Confirm New Password</label>
+            <input type="password" value={confirm} onChange={e => setConfirm(e.target.value)}
+              placeholder="Repeat new password" className="field-input text-sm py-1.5" />
+          </div>
+          <div className="md:col-span-3 flex items-center gap-3">
+            <button onClick={save} disabled={saving} className="btn-primary py-1.5 px-4 text-sm">
+              {saving ? 'Saving…' : 'Update Password'}
+            </button>
+            {msg && (
+              <p className={`text-xs font-medium ${msg.ok ? 'text-green-700' : 'text-red-600'}`}>
+                {msg.ok ? '✓ ' : '✗ '}{msg.text}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Settings ──────────────────────────────────────────────────────────────────
 function ExpectedAmountSetting() {
   const [current, setCurrent] = useState(null);
@@ -378,6 +442,7 @@ export default function AdminPage() {
 
         {/* Settings */}
         <ExpectedAmountSetting />
+        <ChangePassword />
 
         {/* Filters */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 md:p-4">
