@@ -130,7 +130,7 @@ export default function FormPage() {
         {/* Blue top section */}
         <div style={{ backgroundColor: '#3264C8' }} className="text-white">
           {/* Tagline row */}
-          <div className="flex justify-between items-center px-3 md:px-5 pt-2 pb-1 text-[10px] md:text-xs font-bold italic" style={{ color: '#FF4444' }}>
+          <div className="flex justify-between items-center px-3 md:px-5 pt-2 pb-1 text-[10px] md:text-xs font-bold italic text-white">
             <span>Educate !</span>
             <span>Organise !!</span>
             <span>Agitate !!!</span>
