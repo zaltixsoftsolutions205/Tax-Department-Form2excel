@@ -131,14 +131,12 @@ router.get('/download-excel', async (req, res) => {
     const today    = new Date().toISOString().split('T')[0];
     const filename = `association-data-${today}.xlsx`;
 
-    res.setHeader(
-      'Content-Type',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    );
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    const buffer = await workbook.xlsx.writeBuffer();
 
-    await workbook.xlsx.write(res);
-    res.end();
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Length', buffer.length);
+    res.send(buffer);
   } catch (err) {
     console.error('Download excel error:', err);
     res.status(500).json({ success: false, message: 'Failed to generate Excel' });

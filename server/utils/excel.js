@@ -34,7 +34,7 @@ async function generateExcel(submissions) {
   });
 
   // Title row (row 1)
-  ws.mergeCells('A1:Q1');
+  ws.mergeCells('A1:P1');
   const titleCell = ws.getCell('A1');
   titleCell.value =
     'TELANGANA COMMERCIAL TAXES S.C./S.T. EMPLOYEES ASSOCIATION – Submissions';
