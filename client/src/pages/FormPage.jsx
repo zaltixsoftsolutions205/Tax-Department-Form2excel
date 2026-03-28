@@ -128,39 +128,39 @@ export default function FormPage() {
       <div className="max-w-3xl mx-auto mb-4 md:mb-6 rounded-xl overflow-hidden shadow-lg border border-gray-200">
 
         {/* Blue top section */}
-        <div className="bg-blue-800 text-white">
+        <div style={{ backgroundColor: '#3264C8' }} className="text-white">
           {/* Tagline row */}
-          <div className="flex justify-between items-center px-3 md:px-5 pt-2 pb-1 text-[10px] md:text-xs font-bold text-red-400 italic">
+          <div className="flex justify-between items-center px-3 md:px-5 pt-2 pb-1 text-[10px] md:text-xs font-bold italic" style={{ color: '#FF4444' }}>
             <span>Educate !</span>
             <span>Organise !!</span>
             <span>Agitate !!!</span>
           </div>
 
           {/* Logo + Title */}
-          <div className="flex items-center gap-3 px-3 md:px-6 pb-3 md:pb-4">
-            {/* Placeholder circle for photo */}
-            <div className="w-14 h-14 md:w-20 md:h-20 rounded-full bg-white flex-shrink-0 overflow-hidden border-2 border-white flex items-center justify-center">
-              <svg className="w-8 h-8 md:w-12 md:h-12 text-blue-800" fill="currentColor" viewBox="0 0 24 24">
+          <div className="flex items-center gap-2 md:gap-4 px-3 md:px-5 pb-3">
+            {/* Circle photo placeholder */}
+            <div className="w-14 h-14 md:w-20 md:h-20 rounded-full bg-white flex-shrink-0 border-2 border-white flex items-center justify-center overflow-hidden">
+              <svg className="w-9 h-9 md:w-14 md:h-14" style={{ color: '#3264C8' }} fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
               </svg>
             </div>
 
             {/* Title text */}
             <div className="flex-1 text-center">
-              <h1 className="text-lg md:text-3xl font-extrabold leading-tight tracking-wide uppercase text-white">
+              <h1 style={{ fontSize: 'clamp(1.1rem, 4vw, 2rem)', fontWeight: 900, lineHeight: 1.1, letterSpacing: '0.02em', textTransform: 'uppercase', color: '#FFFFFF', textShadow: '1px 1px 2px rgba(0,0,0,0.3)' }}>
                 Telangana Commercial Taxes
               </h1>
-              <h2 className="text-base md:text-2xl font-extrabold leading-tight tracking-wide uppercase text-white">
+              <h2 style={{ fontSize: 'clamp(0.95rem, 3.5vw, 1.75rem)', fontWeight: 900, lineHeight: 1.1, letterSpacing: '0.02em', textTransform: 'uppercase', color: '#FFFFFF', textShadow: '1px 1px 2px rgba(0,0,0,0.3)' }}>
                 S.C./S.T. Employees Association
               </h2>
-              <p className="text-white font-semibold text-xs md:text-sm mt-1">HYDERABAD</p>
-              <p className="text-white/80 text-[10px] md:text-xs">( Regd.No. 5045/1994 )</p>
+              <p className="font-bold text-xs md:text-sm mt-1" style={{ color: '#1a1a6e' }}>HYDERABAD</p>
+              <p className="text-[10px] md:text-xs" style={{ color: '#1a1a6e' }}>( Regd.No. 5045/1994 )</p>
             </div>
           </div>
         </div>
 
         {/* Office bearers row */}
-        <div className="bg-white border-t-2 border-blue-800 grid grid-cols-2 md:grid-cols-4 divide-x divide-gray-200">
+        <div className="bg-white border-t border-gray-300 grid grid-cols-2 md:grid-cols-4 divide-x divide-gray-200">
           {[
             { role: 'President',           name: 'K. BHEEKYA NAIK',  phone: '9440517955' },
             { role: 'Associate President', name: 'M. VIJAY KUMAR',   phone: '7396102255' },
@@ -168,9 +168,9 @@ export default function FormPage() {
             { role: 'General Secretary',   name: 'K. NAGENDER',      phone: '8790071900' },
           ].map(({ role, name, phone }) => (
             <div key={role} className="text-center py-2 px-1">
-              <p className="text-[9px] md:text-xs text-gray-600 font-medium">{role} :</p>
-              <p className="text-[10px] md:text-sm font-bold text-red-600 leading-tight">{name}</p>
-              <p className="text-[9px] md:text-xs text-gray-600">{phone}</p>
+              <p className="text-[9px] md:text-xs text-gray-700">{role} :</p>
+              <p className="text-[11px] md:text-sm font-bold leading-tight" style={{ color: '#CC0000' }}>{name}</p>
+              <p className="text-[9px] md:text-xs text-gray-700">{phone}</p>
             </div>
           ))}
         </div>
