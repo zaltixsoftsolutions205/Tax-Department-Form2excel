@@ -130,7 +130,7 @@ export default function FormPage() {
         {/* Blue top section */}
         <div className="bg-blue-800 text-white">
           {/* Tagline row */}
-          <div className="flex justify-between items-center px-3 md:px-5 pt-2 pb-1 text-[10px] md:text-xs font-semibold text-yellow-300 italic">
+          <div className="flex justify-between items-center px-3 md:px-5 pt-2 pb-1 text-[10px] md:text-xs font-bold text-red-400 italic">
             <span>Educate !</span>
             <span>Organise !!</span>
             <span>Agitate !!!</span>
@@ -139,7 +139,7 @@ export default function FormPage() {
           {/* Logo + Title */}
           <div className="flex items-center gap-3 px-3 md:px-6 pb-3 md:pb-4">
             {/* Placeholder circle for photo */}
-            <div className="w-14 h-14 md:w-20 md:h-20 rounded-full bg-white flex-shrink-0 overflow-hidden border-2 border-yellow-300 flex items-center justify-center">
+            <div className="w-14 h-14 md:w-20 md:h-20 rounded-full bg-white flex-shrink-0 overflow-hidden border-2 border-white flex items-center justify-center">
               <svg className="w-8 h-8 md:w-12 md:h-12 text-blue-800" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
               </svg>
@@ -147,14 +147,14 @@ export default function FormPage() {
 
             {/* Title text */}
             <div className="flex-1 text-center">
-              <h1 className="text-lg md:text-3xl font-extrabold leading-tight tracking-wide uppercase text-white drop-shadow">
+              <h1 className="text-lg md:text-3xl font-extrabold leading-tight tracking-wide uppercase text-white">
                 Telangana Commercial Taxes
               </h1>
-              <h2 className="text-base md:text-2xl font-extrabold leading-tight tracking-wide uppercase text-white drop-shadow">
+              <h2 className="text-base md:text-2xl font-extrabold leading-tight tracking-wide uppercase text-white">
                 S.C./S.T. Employees Association
               </h2>
-              <p className="text-yellow-300 font-bold text-sm md:text-base mt-1">HYDERABAD</p>
-              <p className="text-yellow-200 text-xs md:text-sm">( Regd.No. 5045/1994 )</p>
+              <p className="text-white font-semibold text-xs md:text-sm mt-1">HYDERABAD</p>
+              <p className="text-white/80 text-[10px] md:text-xs">( Regd.No. 5045/1994 )</p>
             </div>
           </div>
         </div>
@@ -168,9 +168,9 @@ export default function FormPage() {
             { role: 'General Secretary',   name: 'K. NAGENDER',      phone: '8790071900' },
           ].map(({ role, name, phone }) => (
             <div key={role} className="text-center py-2 px-1">
-              <p className="text-[9px] md:text-xs text-gray-500 font-medium">{role} :</p>
-              <p className="text-[10px] md:text-sm font-bold text-blue-800 leading-tight">{name}</p>
-              <p className="text-[9px] md:text-xs text-gray-500">{phone}</p>
+              <p className="text-[9px] md:text-xs text-gray-600 font-medium">{role} :</p>
+              <p className="text-[10px] md:text-sm font-bold text-red-600 leading-tight">{name}</p>
+              <p className="text-[9px] md:text-xs text-gray-600">{phone}</p>
             </div>
           ))}
         </div>
