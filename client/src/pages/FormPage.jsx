@@ -138,11 +138,9 @@ export default function FormPage() {
 
           {/* Logo + Title */}
           <div className="flex items-center gap-2 md:gap-4 px-3 md:px-5 pb-3">
-            {/* Circle photo placeholder */}
-            <div className="w-14 h-14 md:w-20 md:h-20 rounded-full bg-white flex-shrink-0 border-2 border-white flex items-center justify-center overflow-hidden">
-              <svg className="w-9 h-9 md:w-14 md:h-14" style={{ color: '#3264C8' }} fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
-              </svg>
+            {/* Dr. Ambedkar photo */}
+            <div className="w-14 h-14 md:w-20 md:h-20 rounded-full flex-shrink-0 border-2 border-white overflow-hidden">
+              <img src="/ambedkar.jpg" alt="Dr. B.R. Ambedkar" className="w-full h-full object-cover object-top" />
             </div>
 
             {/* Title text */}
