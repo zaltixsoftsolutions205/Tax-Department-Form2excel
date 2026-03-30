@@ -179,11 +179,11 @@ export default function FormPage() {
 
             {/* Title text */}
             <div className="flex-1 text-center overflow-hidden" style={{ minWidth: 0 }}>
-              <h1 style={{ fontSize: 'clamp(0.72rem, 3.5vw, 1.75rem)', fontWeight: 900, lineHeight: 1.15, letterSpacing: '0.02em', textTransform: 'uppercase', color: '#DD0000', whiteSpace: 'nowrap', overflow: 'hidden', textShadow: '-2px 0 0 #fff, 2px 0 0 #fff, 0 -2px 0 #fff, 0 2px 0 #fff, -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 2px 2px 0 #fff' }}>
+              <h1 style={{ fontSize: 'clamp(0.82rem, 4.2vw, 2rem)', fontWeight: 900, lineHeight: 1.1, letterSpacing: '0.03em', textTransform: 'uppercase', color: '#CC0000', whiteSpace: 'nowrap', overflow: 'hidden', textShadow: '-1.5px 0 0 #fff, 1.5px 0 0 #fff, 0 -1.5px 0 #fff, 0 1.5px 0 #fff, -1.5px -1.5px 0 #fff, 1.5px -1.5px 0 #fff, -1.5px 1.5px 0 #fff, 1.5px 1.5px 0 #fff' }}>
                 Telangana Commercial Taxes
               </h1>
-              <h2 style={{ fontSize: 'clamp(0.68rem, 3.2vw, 1.6rem)', fontWeight: 900, lineHeight: 1.15, letterSpacing: '0.02em', textTransform: 'uppercase', color: '#DD0000', whiteSpace: 'nowrap', overflow: 'hidden', textShadow: '-2px 0 0 #fff, 2px 0 0 #fff, 0 -2px 0 #fff, 0 2px 0 #fff, -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 2px 2px 0 #fff' }}>
-                SC/ST Employees Association
+              <h2 style={{ fontSize: 'clamp(0.75rem, 3.8vw, 1.85rem)', fontWeight: 900, lineHeight: 1.1, letterSpacing: '0.03em', textTransform: 'uppercase', color: '#CC0000', whiteSpace: 'nowrap', overflow: 'hidden', textShadow: '-1.5px 0 0 #fff, 1.5px 0 0 #fff, 0 -1.5px 0 #fff, 0 1.5px 0 #fff, -1.5px -1.5px 0 #fff, 1.5px -1.5px 0 #fff, -1.5px 1.5px 0 #fff, 1.5px 1.5px 0 #fff' }}>
+                S.C./S.T. Employees Association
               </h2>
               <p className="font-bold text-xs md:text-sm mt-1" style={{ color: '#1a1a6e' }}>HYDERABAD</p>
               <p className="text-[10px] md:text-xs" style={{ color: '#1a1a6e' }}>( Regd.No. 5045/1994 )</p>
