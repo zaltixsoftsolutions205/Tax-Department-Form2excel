@@ -161,7 +161,7 @@ export default function FormPage() {
       {/* Header */}
       <div className="max-w-3xl mx-auto mb-4 md:mb-6 rounded-xl overflow-hidden shadow-lg">
         <img
-          src="/header.png"
+          src="/header.jpeg"
           alt="Telangana Commercial Taxes S.C./S.T. Employees Association"
           className="w-full h-auto block"
         />
