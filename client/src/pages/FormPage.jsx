@@ -173,20 +173,20 @@ export default function FormPage() {
           {/* Logo + Title */}
           <div className="flex items-center gap-2 md:gap-4 px-3 md:px-5 pb-3">
             {/* Dr. Ambedkar photo */}
-            <div className="w-14 h-14 md:w-20 md:h-20 rounded-full flex-shrink-0 border-2 border-white overflow-hidden">
+            <div className="w-12 h-12 md:w-20 md:h-20 rounded-full flex-shrink-0 border-2 border-white overflow-hidden">
               <img src="/ambedkar.jpg" alt="Dr. B.R. Ambedkar" className="w-full h-full object-cover object-top" />
             </div>
 
             {/* Title text */}
-            <div className="flex-1 text-center overflow-hidden" style={{ minWidth: 0 }}>
-              <h1 style={{ fontSize: 'clamp(0.82rem, 4.2vw, 2rem)', fontWeight: 900, lineHeight: 1.1, letterSpacing: '0.03em', textTransform: 'uppercase', color: '#CC0000', whiteSpace: 'nowrap', overflow: 'hidden', textShadow: '-1px 0 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, 0 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff' }}>
+            <div className="flex-1 text-center" style={{ minWidth: 0 }}>
+              <h1 style={{ fontSize: 'clamp(0.78rem, 4vw, 2rem)', fontWeight: 900, lineHeight: 1.15, letterSpacing: '0.02em', textTransform: 'uppercase', color: '#CC0000', textShadow: '-1px 0 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, 0 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff' }}>
                 Telangana Commercial Taxes
               </h1>
-              <h2 style={{ fontSize: 'clamp(0.75rem, 3.8vw, 1.85rem)', fontWeight: 900, lineHeight: 1.1, letterSpacing: '0.03em', textTransform: 'uppercase', color: '#CC0000', whiteSpace: 'nowrap', overflow: 'hidden', textShadow: '-1px 0 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, 0 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff' }}>
+              <h2 style={{ fontSize: 'clamp(0.72rem, 3.6vw, 1.85rem)', fontWeight: 900, lineHeight: 1.15, letterSpacing: '0.02em', textTransform: 'uppercase', color: '#CC0000', textShadow: '-1px 0 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, 0 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff' }}>
                 S.C./S.T. Employees Association
               </h2>
-              <p className="font-bold text-xs md:text-sm mt-1" style={{ color: '#1a1a6e' }}>HYDERABAD</p>
-              <p className="text-[10px] md:text-xs" style={{ color: '#1a1a6e' }}>( Regd.No. 5045/1994 )</p>
+              <p className="font-bold text-[10px] md:text-sm mt-1" style={{ color: '#1a1a6e' }}>HYDERABAD</p>
+              <p className="text-[9px] md:text-xs" style={{ color: '#1a1a6e' }}>( Regd.No. 5045/1994 )</p>
             </div>
           </div>
         </div>
