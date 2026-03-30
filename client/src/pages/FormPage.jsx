@@ -179,10 +179,10 @@ export default function FormPage() {
 
             {/* Title text */}
             <div className="flex-1 text-center" style={{ minWidth: 0 }}>
-              <h1 style={{ fontFamily: "Impact, 'Arial Black', sans-serif", fontSize: 'clamp(3.8vw, 4.5vw, 2rem)', lineHeight: 1.1, letterSpacing: '0.03em', textTransform: 'uppercase', color: '#CC0000', whiteSpace: 'nowrap', textShadow: '-1px 0 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, 0 1px 0 #fff' }}>
+              <h1 style={{ fontFamily: "Impact, 'Arial Black', sans-serif", fontSize: 'clamp(1rem, 3.5vw, 1.8rem)', lineHeight: 1.1, letterSpacing: '0.03em', textTransform: 'uppercase', color: '#CC0000', textShadow: '-1px 0 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, 0 1px 0 #fff' }}>
                 Telangana Commercial Taxes
               </h1>
-              <h2 style={{ fontFamily: "Impact, 'Arial Black', sans-serif", fontSize: 'clamp(3.3vw, 4vw, 1.75rem)', lineHeight: 1.1, letterSpacing: '0.03em', textTransform: 'uppercase', color: '#CC0000', whiteSpace: 'nowrap', textShadow: '-1px 0 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, 0 1px 0 #fff' }}>
+              <h2 style={{ fontFamily: "Impact, 'Arial Black', sans-serif", fontSize: 'clamp(0.85rem, 3vw, 1.6rem)', lineHeight: 1.1, letterSpacing: '0.03em', textTransform: 'uppercase', color: '#CC0000', textShadow: '-1px 0 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, 0 1px 0 #fff' }}>
                 S.C./S.T. Employees Association
               </h2>
               <p className="font-bold text-[10px] md:text-sm mt-1" style={{ color: '#1a1a6e' }}>HYDERABAD</p>
