@@ -171,18 +171,18 @@ export default function FormPage() {
           </div>
 
           {/* Logo + Title */}
-          <div className="flex flex-col md:flex-row items-center gap-1 md:gap-4 px-3 md:px-5 pb-3">
+          <div className="flex flex-row items-center gap-2 md:gap-4 px-3 md:px-5 pb-3">
             {/* Dr. Ambedkar photo */}
-            <div className="w-16 h-16 md:w-20 md:h-20 rounded-full flex-shrink-0 border-2 border-white overflow-hidden mt-1 md:mt-0">
+            <div className="w-14 h-14 md:w-20 md:h-20 rounded-full flex-shrink-0 border-2 border-white overflow-hidden">
               <img src="/ambedkar.jpg" alt="Dr. B.R. Ambedkar" className="w-full h-full object-cover object-top" />
             </div>
 
             {/* Title text */}
-            <div className="flex-1 text-center w-full" style={{ minWidth: 0 }}>
-              <h1 style={{ fontFamily: "Impact, 'Arial Black', sans-serif", fontSize: 'clamp(1.1rem, 5.5vw, 2.4rem)', lineHeight: 1.1, letterSpacing: '0.03em', textTransform: 'uppercase', color: '#CC0000', whiteSpace: 'nowrap', textShadow: '-1px 0 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, 0 1px 0 #fff' }}>
+            <div className="flex-1 text-center overflow-hidden" style={{ minWidth: 0 }}>
+              <h1 style={{ fontFamily: "Impact, 'Arial Black', sans-serif", fontSize: '4.8vw', lineHeight: 1.1, letterSpacing: '0.03em', textTransform: 'uppercase', color: '#CC0000', whiteSpace: 'nowrap', textShadow: '-1px 0 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, 0 1px 0 #fff' }}>
                 Telangana Commercial Taxes
               </h1>
-              <h2 style={{ fontFamily: "Impact, 'Arial Black', sans-serif", fontSize: 'clamp(0.95rem, 4.8vw, 2.1rem)', lineHeight: 1.1, letterSpacing: '0.03em', textTransform: 'uppercase', color: '#CC0000', whiteSpace: 'nowrap', textShadow: '-1px 0 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, 0 1px 0 #fff' }}>
+              <h2 style={{ fontFamily: "Impact, 'Arial Black', sans-serif", fontSize: '4.2vw', lineHeight: 1.1, letterSpacing: '0.03em', textTransform: 'uppercase', color: '#CC0000', whiteSpace: 'nowrap', textShadow: '-1px 0 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, 0 1px 0 #fff' }}>
                 S.C./S.T. Employees Association
               </h2>
               <p className="font-bold text-[10px] md:text-sm mt-1" style={{ color: '#1a1a6e' }}>HYDERABAD</p>
