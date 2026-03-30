@@ -11,14 +11,17 @@ const INITIAL = {
 };
 
 export default function FormPage() {
-  const [form,       setForm]       = useState(INITIAL);
-  const [file,       setFile]       = useState(null);
-  const [preview,    setPreview]    = useState(null);
-  const [errors,     setErrors]     = useState({});
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted,  setSubmitted]  = useState(false);
-  const [serverMsg,  setServerMsg]  = useState('');
-  const fileRef = useRef(null);
+  const [form,           setForm]           = useState(INITIAL);
+  const [file,           setFile]           = useState(null);
+  const [preview,        setPreview]        = useState(null);
+  const [passport,       setPassport]       = useState(null);
+  const [passportPreview,setPassportPreview]= useState(null);
+  const [errors,         setErrors]         = useState({});
+  const [submitting,     setSubmitting]     = useState(false);
+  const [submitted,      setSubmitted]      = useState(false);
+  const [serverMsg,      setServerMsg]      = useState('');
+  const fileRef     = useRef(null);
+  const passportRef = useRef(null);
 
   const handleChange = useCallback((e) => {
     const { name, value } = e.target;
@@ -61,6 +64,35 @@ export default function FormPage() {
     if (fileRef.current) fileRef.current.value = '';
   };
 
+  const handlePassport = useCallback((e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    if (!['image/jpeg', 'image/jpg', 'image/png'].includes(f.type)) {
+      setErrors(p => ({ ...p, passport: 'Only JPEG / PNG allowed.' })); return;
+    }
+    setErrors(p => ({ ...p, passport: '' }));
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 300; canvas.height = 375; // passport ratio 4:5
+        canvas.getContext('2d').drawImage(img, 0, 0, 300, 375);
+        canvas.toBlob(blob => {
+          setPassport(new File([blob], f.name, { type: 'image/jpeg' }));
+          setPassportPreview(canvas.toDataURL('image/jpeg', 0.85));
+        }, 'image/jpeg', 0.85);
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(f);
+  }, []);
+
+  const removePassport = () => {
+    setPassport(null); setPassportPreview(null);
+    if (passportRef.current) passportRef.current.value = '';
+  };
+
   const validate = () => {
     const e = {};
     if (!form.name.trim())                    e.name = 'Required';
@@ -72,6 +104,7 @@ export default function FormPage() {
     if (!form.division.trim())                e.division = 'Required';
     if (!form.circle.trim())                  e.circle = 'Required';
     if (!form.educationQualifications.trim()) e.educationQualifications = 'Required';
+    if (!passport)                             e.passport = 'Passport size photo is required.';
     if (!file)                                e.file = 'Payment screenshot is required.';
     return e;
   };
@@ -83,6 +116,7 @@ export default function FormPage() {
     setSubmitting(true); setServerMsg('');
     const fd = new FormData();
     Object.entries(form).forEach(([k, v]) => fd.append(k, v));
+    fd.append('passportPhoto', passport);
     fd.append('paymentScreenshot', file);
     try {
       const { data } = await api.post('/api/submit-form', fd, {
@@ -113,7 +147,7 @@ export default function FormPage() {
           </div>
           <h2 className="text-xl font-bold text-gray-800 mb-2">Submitted Successfully!</h2>
           <p className="text-gray-600 mb-6 text-sm leading-relaxed">{serverMsg}</p>
-          <button onClick={() => { setSubmitted(false); setForm(INITIAL); setFile(null); setPreview(null); }}
+          <button onClick={() => { setSubmitted(false); setForm(INITIAL); setFile(null); setPreview(null); setPassport(null); setPassportPreview(null); }}
             className="btn-primary w-full">Submit Another Response</button>
         </div>
       </div>
@@ -213,6 +247,41 @@ export default function FormPage() {
               <input type="text" name="caste" value={form.caste} onChange={handleChange}
                 placeholder="Enter your caste" className="field-input" />
             </F>
+          </div>
+
+          {/* Passport Size Photo */}
+          <SectionHeader icon="🪪" title="Passport Size Photo" />
+          <div className="px-3 md:px-6 py-3 md:py-5">
+            <p className="text-xs text-gray-500 mb-3">
+              Upload a recent <strong>passport size photo</strong> (face clearly visible). JPEG or PNG only.
+            </p>
+            {!passportPreview ? (
+              <label htmlFor="passportInput"
+                className={`flex flex-col items-center justify-center w-full h-36 border-2 border-dashed rounded-xl cursor-pointer transition-colors
+                  ${errors.passport ? 'border-red-400 bg-red-50' : 'border-blue-300 hover:border-blue-500 hover:bg-blue-50 bg-blue-50/30'}`}>
+                <svg className="w-10 h-10 text-blue-400 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                <span className="text-sm font-semibold text-blue-600">Tap to upload passport photo</span>
+                <span className="text-xs text-gray-400 mt-1">JPEG or PNG • will be cropped to passport size</span>
+                <input id="passportInput" ref={passportRef} type="file" accept="image/jpeg,image/jpg,image/png"
+                  className="hidden" onChange={handlePassport} />
+              </label>
+            ) : (
+              <div className="relative inline-block">
+                <img src={passportPreview} alt="passport preview"
+                  className="h-40 w-32 rounded-lg border-2 border-green-300 shadow-sm object-cover" />
+                <button type="button" onClick={removePassport}
+                  className="absolute -top-2 -right-2 w-7 h-7 bg-red-600 text-white rounded-full flex items-center justify-center shadow hover:bg-red-700">
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+                <p className="text-xs text-green-600 font-medium mt-2">✓ Passport photo uploaded</p>
+              </div>
+            )}
+            {errors.passport && <p className="field-error mt-2">{errors.passport}</p>}
           </div>
 
           {/* Working Place */}

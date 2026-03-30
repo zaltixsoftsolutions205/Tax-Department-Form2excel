@@ -28,7 +28,7 @@ const formValidation = [
 router.post(
   '/submit-form',
   (req, res, next) => {
-    upload.single('paymentScreenshot')(req, res, (err) => {
+    upload.fields([{ name: 'passportPhoto', maxCount: 1 }, { name: 'paymentScreenshot', maxCount: 1 }])(req, res, (err) => {
       if (err instanceof multer.MulterError) {
         return res.status(400).json({ success: false, message: err.code === 'LIMIT_FILE_SIZE' ? 'File size must be under 2 MB' : err.message });
       }
@@ -46,11 +46,18 @@ router.post(
     try {
       const { name, parentsName, mobile, religion, caste, maritalStatus, designation, division, circle, educationQualifications, residenceAddress, interests } = req.body;
 
-      if (!req.file) {
+      const passportFile   = req.files?.passportPhoto?.[0];
+      const screenshotFile = req.files?.paymentScreenshot?.[0];
+
+      if (!passportFile) {
+        return res.status(400).json({ success: false, message: 'Passport photo is required.' });
+      }
+      if (!screenshotFile) {
         return res.status(400).json({ success: false, message: 'Payment screenshot is required.' });
       }
 
-      const screenshotRelPath = path.relative(path.join(__dirname, '..'), req.file.path).replace(/\\/g, '/');
+      const passportRelPath   = path.relative(path.join(__dirname, '..'), passportFile.path).replace(/\\/g, '/');
+      const screenshotRelPath = path.relative(path.join(__dirname, '..'), screenshotFile.path).replace(/\\/g, '/');
 
       // Save with Pending first — OCR runs after response
       const submission = new Submission({
@@ -64,6 +71,7 @@ router.post(
         educationQualifications,
         residenceAddress: residenceAddress || '',
         interests: interests || '',
+        passportPhoto: passportRelPath,
         paymentScreenshot: screenshotRelPath,
         paymentStatus: 'Pending',
       });
@@ -77,7 +85,7 @@ router.post(
       (async () => {
         try {
           const expectedAmount = await getExpectedAmount();
-          const { text, amount } = await extractTextFromImage(req.file.path);
+          const { text, amount } = await extractTextFromImage(screenshotFile.path);
 
           let paymentStatus = 'Invalid Screenshot';
           let extractedAmount = null;

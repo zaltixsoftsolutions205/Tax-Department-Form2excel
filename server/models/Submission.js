@@ -79,6 +79,12 @@ const submissionSchema = new mongoose.Schema(
       default: '',
     },
 
+    // Passport Photo
+    passportPhoto: {
+      type: String,
+      default: null,
+    },
+
     // Payment Info
     paymentScreenshot: {
       type: String,
