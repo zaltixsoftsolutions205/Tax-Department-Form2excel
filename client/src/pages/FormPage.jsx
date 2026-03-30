@@ -164,45 +164,68 @@ export default function FormPage() {
         {/* Blue top section */}
         <div style={{ backgroundColor: '#3264C8' }} className="text-white">
           {/* Tagline row */}
-          <div className="flex justify-between items-center px-3 md:px-5 pt-2 pb-1 text-[10px] md:text-xs font-bold italic text-white">
+          <div className="flex justify-between items-center px-3 md:px-5 pt-2 pb-1 text-[10px] md:text-[11px] font-bold italic text-white">
             <span>Educate !</span>
             <span>Organise !!</span>
             <span>Agitate !!!</span>
           </div>
 
           {/* Logo + Title */}
-          <div className="flex flex-row items-center gap-2 md:gap-4 px-3 md:px-5 pb-3">
+          <div className="flex flex-row items-center gap-2 md:gap-3 px-3 md:px-4 pb-3">
             {/* Dr. Ambedkar photo */}
-            <div className="w-14 h-14 md:w-20 md:h-20 rounded-full flex-shrink-0 border-2 border-white overflow-hidden">
+            <div className="w-[60px] h-[60px] md:w-[80px] md:h-[80px] rounded-full flex-shrink-0 border-2 border-white overflow-hidden bg-white">
               <img src="/ambedkar.jpg" alt="Dr. B.R. Ambedkar" className="w-full h-full object-cover object-top" />
             </div>
 
             {/* Title text */}
             <div className="flex-1 text-center" style={{ minWidth: 0 }}>
-              <h1 style={{ fontFamily: "Impact, 'Arial Black', sans-serif", fontSize: 'clamp(1.4rem, 5vw, 2.2rem)', lineHeight: 1.1, letterSpacing: '0.03em', textTransform: 'uppercase', color: '#CC0000', textShadow: '-1.5px 0 0 #fff, 1.5px 0 0 #fff, 0 -1.5px 0 #fff, 0 1.5px 0 #fff' }}>
-                Telangana Commercial Taxes
-              </h1>
-              <h2 style={{ fontFamily: "Impact, 'Arial Black', sans-serif", fontSize: 'clamp(1.2rem, 4.4vw, 2rem)', lineHeight: 1.1, letterSpacing: '0.03em', textTransform: 'uppercase', color: '#CC0000', textShadow: '-1.5px 0 0 #fff, 1.5px 0 0 #fff, 0 -1.5px 0 #fff, 0 1.5px 0 #fff' }}>
-                S.C./S.T. Employees Association
-              </h2>
-              <p className="font-bold text-[10px] md:text-sm mt-1" style={{ color: '#1a1a6e' }}>HYDERABAD</p>
-              <p className="text-[9px] md:text-xs" style={{ color: '#1a1a6e' }}>( Regd.No. 5045/1994 )</p>
+              <div style={{
+                fontFamily: 'Impact, "Arial Black", Arial, sans-serif',
+                fontSize: 'clamp(1.25rem, 5.5vw, 2.4rem)',
+                lineHeight: 1.08,
+                letterSpacing: '0.02em',
+                textTransform: 'uppercase',
+                color: '#CC0000',
+                WebkitTextStroke: '0.5px white',
+                paintOrder: 'stroke fill',
+              }}>
+                TELANGANA COMMERCIAL TAXES
+              </div>
+              <div style={{
+                fontFamily: 'Impact, "Arial Black", Arial, sans-serif',
+                fontSize: 'clamp(1.25rem, 5.5vw, 2.4rem)',
+                lineHeight: 1.08,
+                letterSpacing: '0.02em',
+                textTransform: 'uppercase',
+                color: '#CC0000',
+                WebkitTextStroke: '0.5px white',
+                paintOrder: 'stroke fill',
+              }}>
+                S.C./S.T. EMPLOYEES ASSOCIATION
+              </div>
+              <div className="font-bold text-[11px] md:text-sm mt-1" style={{ color: '#0a0a5e', fontFamily: 'Arial, sans-serif' }}>
+                HYDERABAD
+              </div>
+              <div className="inline-block px-2 py-0.5 mt-0.5 text-[9px] md:text-[11px]"
+                style={{ backgroundColor: '#ffffcc', color: '#1a1a6e', fontFamily: 'Arial, sans-serif', border: '1px solid #cccc00', borderRadius: 2 }}>
+                ( Regd.No. 5045/1994 )
+              </div>
             </div>
           </div>
         </div>
 
         {/* Office bearers row */}
-        <div className="bg-white border-t border-gray-300 grid grid-cols-2 md:grid-cols-4 divide-x divide-gray-200">
+        <div className="bg-white border-t-2 border-gray-400 grid grid-cols-2 md:grid-cols-4 divide-x divide-gray-300">
           {[
             { role: 'President',           name: 'K. BHEEKYA NAIK',  phone: '9440517955' },
             { role: 'Associate President', name: 'M. VIJAY KUMAR',   phone: '7396102255' },
             { role: 'Treasurer',           name: 'A. ANAND KUMAR',   phone: '9398774991' },
             { role: 'General Secretary',   name: 'K. NAGENDER',      phone: '8790071900' },
           ].map(({ role, name, phone }) => (
-            <div key={role} className="text-center py-2 px-1">
-              <p className="text-[9px] md:text-xs text-gray-700">{role} :</p>
-              <p className="text-[11px] md:text-sm font-bold leading-tight" style={{ color: '#CC0000' }}>{name}</p>
-              <p className="text-[9px] md:text-xs text-gray-700">{phone}</p>
+            <div key={role} className="text-center py-1.5 px-1">
+              <p className="text-[9px] md:text-[11px] text-gray-700">{role} :</p>
+              <p className="text-[10px] md:text-[13px] font-extrabold leading-tight" style={{ color: '#CC0000', fontFamily: 'Arial, sans-serif' }}>{name}</p>
+              <p className="text-[9px] md:text-[11px] text-gray-800">{phone}</p>
             </div>
           ))}
         </div>
