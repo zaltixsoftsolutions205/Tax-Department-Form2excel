@@ -179,11 +179,11 @@ export default function FormPage() {
 
             {/* Title text */}
             <div className="flex-1 text-center">
-              <h1 style={{ fontSize: 'clamp(1.2rem, 4.5vw, 2.1rem)', fontWeight: 900, lineHeight: 1.1, letterSpacing: '0.02em', textTransform: 'uppercase', color: '#DD0000', textShadow: '-2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 2px 2px 0 #fff, -3px 0 0 #fff, 3px 0 0 #fff, 0 -3px 0 #fff, 0 3px 0 #fff, -2px -3px 0 #fff, 2px -3px 0 #fff, -2px 3px 0 #fff, 2px 3px 0 #fff' }}>
+              <h1 style={{ fontSize: 'clamp(0.95rem, 3.8vw, 1.75rem)', fontWeight: 900, lineHeight: 1.15, letterSpacing: '0.02em', textTransform: 'uppercase', color: '#DD0000', whiteSpace: 'nowrap', textShadow: '-2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 2px 2px 0 #fff, -3px 0 0 #fff, 3px 0 0 #fff, 0 -3px 0 #fff, 0 3px 0 #fff, -2px -3px 0 #fff, 2px -3px 0 #fff, -2px 3px 0 #fff, 2px 3px 0 #fff' }}>
                 Telangana Commercial Taxes
               </h1>
-              <h2 style={{ fontSize: 'clamp(1rem, 4vw, 1.85rem)', fontWeight: 900, lineHeight: 1.1, letterSpacing: '0.02em', textTransform: 'uppercase', color: '#DD0000', textShadow: '-2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 2px 2px 0 #fff, -3px 0 0 #fff, 3px 0 0 #fff, 0 -3px 0 #fff, 0 3px 0 #fff, -2px -3px 0 #fff, 2px -3px 0 #fff, -2px 3px 0 #fff, 2px 3px 0 #fff' }}>
-                S.C./S.T. Employees Association
+              <h2 style={{ fontSize: 'clamp(0.85rem, 3.4vw, 1.6rem)', fontWeight: 900, lineHeight: 1.15, letterSpacing: '0.02em', textTransform: 'uppercase', color: '#DD0000', whiteSpace: 'nowrap', textShadow: '-2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff, 2px 2px 0 #fff, -3px 0 0 #fff, 3px 0 0 #fff, 0 -3px 0 #fff, 0 3px 0 #fff, -2px -3px 0 #fff, 2px -3px 0 #fff, -2px 3px 0 #fff, 2px 3px 0 #fff' }}>
+                SC/ST Employees Association
               </h2>
               <p className="font-bold text-xs md:text-sm mt-1" style={{ color: '#1a1a6e' }}>HYDERABAD</p>
               <p className="text-[10px] md:text-xs" style={{ color: '#1a1a6e' }}>( Regd.No. 5045/1994 )</p>
