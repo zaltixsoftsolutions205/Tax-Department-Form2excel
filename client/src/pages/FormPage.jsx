@@ -179,10 +179,10 @@ export default function FormPage() {
 
             {/* Title text */}
             <div className="flex-1 text-center" style={{ minWidth: 0 }}>
-              <h1 style={{ fontFamily: "'Anton', sans-serif", fontSize: 'clamp(0.9rem, 4.5vw, 2.2rem)', fontWeight: 400, lineHeight: 1.1, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#CC0000', textShadow: '-1px 0 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, 0 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff' }}>
+              <h1 style={{ fontFamily: "'Anton', sans-serif", fontSize: 'clamp(0.9rem, 4.5vw, 2.2rem)', fontWeight: 400, lineHeight: 1.1, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#CC0000', textShadow: '-1px 0 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, 0 1px 0 #fff' }}>
                 Telangana Commercial Taxes
               </h1>
-              <h2 style={{ fontFamily: "'Anton', sans-serif", fontSize: 'clamp(0.82rem, 4vw, 2rem)', fontWeight: 400, lineHeight: 1.1, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#CC0000', textShadow: '-1px 0 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, 0 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff, 1px 1px 0 #fff' }}>
+              <h2 style={{ fontFamily: "'Anton', sans-serif", fontSize: 'clamp(0.82rem, 4vw, 2rem)', fontWeight: 400, lineHeight: 1.1, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#CC0000', textShadow: '-1px 0 0 #fff, 1px 0 0 #fff, 0 -1px 0 #fff, 0 1px 0 #fff' }}>
                 S.C./S.T. Employees Association
               </h2>
               <p className="font-bold text-[10px] md:text-sm mt-1" style={{ color: '#1a1a6e' }}>HYDERABAD</p>
