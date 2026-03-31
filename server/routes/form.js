@@ -3,15 +3,32 @@ const router  = express.Router();
 const path    = require('path');
 const multer  = require('multer');
 const { body, validationResult } = require('express-validator');
-const { Cashfree, CFEnvironment } = require('cashfree-pg');
+const https = require('https');
 
-const cashfree = new Cashfree(
-  process.env.CASHFREE_ENV === 'PRODUCTION' ? CFEnvironment.PRODUCTION : CFEnvironment.SANDBOX,
-  process.env.CASHFREE_APP_ID,
-  process.env.CASHFREE_SECRET_KEY
-);
-
-const CF_VERSION = '2023-08-01';
+function cfFetchOrder(orderId) {
+  return new Promise((resolve, reject) => {
+    const options = {
+      hostname: 'api.cashfree.com',
+      path:     `/pg/orders/${orderId}`,
+      method:   'GET',
+      headers: {
+        'x-client-id':     process.env.CASHFREE_APP_ID,
+        'x-client-secret': process.env.CASHFREE_SECRET_KEY,
+        'x-api-version':   '2023-08-01',
+        'Content-Type':    'application/json',
+      },
+    };
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.on('data', chunk => { data += chunk; });
+      res.on('end', () => {
+        try { resolve(JSON.parse(data)); } catch { resolve({}); }
+      });
+    });
+    req.on('error', reject);
+    req.end();
+  });
+}
 
 const upload     = require('../middleware/upload');
 const Submission = require('../models/Submission');
@@ -72,8 +89,8 @@ router.post(
       let initialStatus = 'Unpaid';
       if (cashfreeOrderId) {
         try {
-          const cfRes = await cashfree.PGFetchOrder(CF_VERSION, cashfreeOrderId);
-          if (cfRes.data?.order_status === 'PAID') initialStatus = 'Paid';
+          const cfRes = await cfFetchOrder(cashfreeOrderId);
+          if (cfRes.order_status === 'PAID') initialStatus = 'Paid';
         } catch (err) {
           console.error('[Cashfree verify on submit] error:', err?.response?.data || err.message);
         }
