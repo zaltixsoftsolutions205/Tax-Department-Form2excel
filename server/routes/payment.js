@@ -1,12 +1,12 @@
 const express   = require('express');
 const router    = express.Router();
-const { Cashfree } = require('cashfree-pg');
+const { Cashfree, CFEnvironment } = require('cashfree-pg');
 
-Cashfree.XClientId     = process.env.CASHFREE_APP_ID;
-Cashfree.XClientSecret = process.env.CASHFREE_SECRET_KEY;
-Cashfree.XEnvironment  = process.env.CASHFREE_ENV === 'PRODUCTION'
-  ? 'production'
-  : 'sandbox';
+const cashfree = new Cashfree(
+  process.env.CASHFREE_ENV === 'PRODUCTION' ? CFEnvironment.PRODUCTION : CFEnvironment.SANDBOX,
+  process.env.CASHFREE_APP_ID,
+  process.env.CASHFREE_SECRET_KEY
+);
 
 const CF_VERSION = '2023-08-01';
 
@@ -34,7 +34,7 @@ router.post('/create-order', async (req, res) => {
   };
 
   try {
-    const response = await Cashfree.PGCreateOrder(CF_VERSION, orderRequest);
+    const response = await cashfree.PGCreateOrder(CF_VERSION, orderRequest);
     res.json({
       success:          true,
       orderId:          response.data.order_id,
@@ -54,7 +54,7 @@ router.post('/verify', async (req, res) => {
   }
 
   try {
-    const response = await Cashfree.PGFetchOrder(CF_VERSION, orderId);
+    const response = await cashfree.PGFetchOrder(CF_VERSION, orderId);
     const order    = response.data;
     res.json({
       success: true,
