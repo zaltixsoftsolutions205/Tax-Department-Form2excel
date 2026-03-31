@@ -103,6 +103,12 @@ const submissionSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    // Cashfree order
+    cashfreeOrderId: {
+      type: String,
+      trim: true,
+      default: null,
+    },
     // PhonePe / UPI transaction fields
     transactionId: {
       type: String,

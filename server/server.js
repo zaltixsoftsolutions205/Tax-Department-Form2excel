@@ -9,6 +9,7 @@ const fs        = require('fs');
 const formRoutes        = require('./routes/form');
 const adminRoutes       = require('./routes/admin');
 const authRoutes        = require('./routes/auth');
+const paymentRoutes     = require('./routes/payment');
 const authMiddleware    = require('./middleware/authMiddleware');
 
 const app = express();
@@ -49,6 +50,7 @@ app.use('/uploads', express.static(UPLOADS_DIR));
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.use('/api', formRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/payment', paymentRoutes);
 app.use('/api/admin', authMiddleware, adminRoutes); // protected
 
 app.get('/api/health', (_req, res) =>
