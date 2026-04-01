@@ -285,7 +285,8 @@ function KV({ label, v, full }) {
 // ── Main ──────────────────────────────────────────────────────────────────────
 export default function AdminPage() {
   const navigate  = useNavigate();
-  const adminUser = JSON.parse(localStorage.getItem('adminUser') || '{}');
+  const raw = localStorage.getItem('adminUser');
+  const adminUser = (() => { try { return JSON.parse(raw || '{}'); } catch { return {}; } })();
 
   const logout = () => {
     localStorage.removeItem('adminToken');
