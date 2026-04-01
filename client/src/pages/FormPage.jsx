@@ -1,6 +1,16 @@
 import { useState, useRef, useCallback } from 'react';
-import { load } from '@cashfreepayments/cashfree-js';
 import api from '../api';
+
+function loadCashfreeSDK() {
+  return new Promise((resolve, reject) => {
+    if (window.Cashfree) { resolve(window.Cashfree); return; }
+    const script = document.createElement('script');
+    script.src = 'https://sdk.cashfree.com/js/v3/cashfree.js';
+    script.onload = () => resolve(window.Cashfree);
+    script.onerror = () => reject(new Error('Failed to load Cashfree SDK'));
+    document.head.appendChild(script);
+  });
+}
 
 const AMOUNT = 1000;
 
@@ -120,8 +130,9 @@ export default function FormPage() {
         mobile: form.mobile.trim(),
       });
 
-      // 2. Load Cashfree JS and open checkout
-      const cashfree = await load({
+      // 2. Load Cashfree JS SDK via CDN and open checkout
+      const CashfreeSDK = await loadCashfreeSDK();
+      const cashfree = CashfreeSDK({
         mode: import.meta.env.VITE_CASHFREE_ENV === 'PRODUCTION' ? 'production' : 'sandbox',
       });
 
