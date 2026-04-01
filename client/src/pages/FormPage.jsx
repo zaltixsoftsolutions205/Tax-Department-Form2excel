@@ -22,23 +22,20 @@ const INITIAL = {
 };
 
 export default function FormPage() {
-  const [form,           setForm]           = useState(INITIAL);
-  const [file,           setFile]           = useState(null);
-  const [preview,        setPreview]        = useState(null);
-  const [passport,       setPassport]       = useState(null);
-  const [passportPreview,setPassportPreview]= useState(null);
-  const [errors,         setErrors]         = useState({});
-  const [submitting,     setSubmitting]     = useState(false);
-  const [submitted,      setSubmitted]      = useState(false);
-  const [serverMsg,      setServerMsg]      = useState('');
+  const [form,            setForm]           = useState(INITIAL);
+  const [passport,        setPassport]       = useState(null);
+  const [passportPreview, setPassportPreview]= useState(null);
+  const [errors,          setErrors]         = useState({});
+  const [submitting,      setSubmitting]     = useState(false);
+  const [submitted,       setSubmitted]      = useState(false);
+  const [serverMsg,       setServerMsg]      = useState('');
 
   // Payment state
-  const [paymentDone,    setPaymentDone]    = useState(false);
-  const [cashfreeOrderId,setCashfreeOrderId]= useState(null);
-  const [payingNow,      setPayingNow]      = useState(false);
-  const [payError,       setPayError]       = useState('');
+  const [paymentDone,     setPaymentDone]    = useState(false);
+  const [cashfreeOrderId, setCashfreeOrderId]= useState(null);
+  const [payingNow,       setPayingNow]      = useState(false);
+  const [payError,        setPayError]       = useState('');
 
-  const fileRef     = useRef(null);
   const passportRef = useRef(null);
 
   const handleChange = useCallback((e) => {
@@ -46,41 +43,6 @@ export default function FormPage() {
     setForm(p => ({ ...p, [name]: value }));
     setErrors(p => ({ ...p, [name]: '' }));
   }, []);
-
-  const handleFile = useCallback((e) => {
-    const f = e.target.files[0];
-    if (!f) return;
-    if (!['image/jpeg', 'image/jpg', 'image/png'].includes(f.type)) {
-      setErrors(p => ({ ...p, file: 'Only JPEG / PNG allowed.' })); return;
-    }
-    setErrors(p => ({ ...p, file: '' }));
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const img = new Image();
-      img.onload = () => {
-        const MAX = 900;
-        let w = img.width, h = img.height;
-        if (w > MAX || h > MAX) {
-          if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
-          else        { w = Math.round(w * MAX / h); h = MAX; }
-        }
-        const canvas = document.createElement('canvas');
-        canvas.width = w; canvas.height = h;
-        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-        canvas.toBlob(blob => {
-          setFile(new File([blob], f.name, { type: 'image/jpeg' }));
-          setPreview(canvas.toDataURL('image/jpeg', 0.7));
-        }, 'image/jpeg', 0.7);
-      };
-      img.src = reader.result;
-    };
-    reader.readAsDataURL(f);
-  }, []);
-
-  const removeFile = () => {
-    setFile(null); setPreview(null);
-    if (fileRef.current) fileRef.current.value = '';
-  };
 
   const handlePassport = useCallback((e) => {
     const f = e.target.files[0];
@@ -111,7 +73,7 @@ export default function FormPage() {
     if (passportRef.current) passportRef.current.value = '';
   };
 
-  // ── Cashfree Pay ─────────────────────────────────────────────────────────────
+  // ── Cashfree Pay ──────────────────────────────────────────────────────────────
   const handlePay = async () => {
     if (!form.name.trim() || !form.mobile.trim()) {
       setPayError('Please fill in your Name and Mobile Number before paying.');
@@ -124,13 +86,11 @@ export default function FormPage() {
     setPayError('');
     setPayingNow(true);
     try {
-      // 1. Create order
       const { data } = await api.post('/api/payment/create-order', {
         name:   form.name.trim(),
         mobile: form.mobile.trim(),
       });
 
-      // 2. Load Cashfree JS SDK via CDN and open checkout
       const CashfreeSDK = await loadCashfreeSDK();
       const cashfree = CashfreeSDK({
         mode: import.meta.env.VITE_CASHFREE_ENV === 'PRODUCTION' ? 'production' : 'sandbox',
@@ -146,7 +106,6 @@ export default function FormPage() {
         return;
       }
 
-      // 3. Verify with server
       const verify = await api.post('/api/payment/verify', { orderId: data.orderId });
       if (verify.data.paid) {
         setPaymentDone(true);
@@ -175,6 +134,7 @@ export default function FormPage() {
     if (!form.circle.trim())                  e.circle = 'Required';
     if (!form.educationQualifications.trim()) e.educationQualifications = 'Required';
     if (!passport)                             e.passport = 'Passport size photo is required.';
+    if (!paymentDone)                          e.payment = 'Please complete payment of ₹1,000 before submitting.';
     return e;
   };
 
@@ -186,8 +146,7 @@ export default function FormPage() {
     const fd = new FormData();
     Object.entries(form).forEach(([k, v]) => fd.append(k, v));
     fd.append('passportPhoto', passport);
-    if (file) fd.append('paymentScreenshot', file);
-    if (cashfreeOrderId) fd.append('cashfreeOrderId', cashfreeOrderId);
+    fd.append('cashfreeOrderId', cashfreeOrderId);
     try {
       const { data } = await api.post('/api/submit-form', fd, {
         headers: { 'Content-Type': 'multipart/form-data' },
@@ -195,12 +154,8 @@ export default function FormPage() {
       setSubmitted(true);
       setServerMsg(
         data.paymentStatus === 'Paid'
-          ? 'Payment of ₹1000 confirmed! Welcome to the Association.'
-          : data.paymentStatus === 'Invalid Screenshot'
-          ? 'Screenshot could not be verified. Admin will review your payment.'
-          : data.paymentStatus === 'Pending'
-          ? 'Form submitted. Admin will verify your payment shortly.'
-          : 'Form submitted successfully. Please complete payment to activate membership.'
+          ? 'Payment of ₹1,000 confirmed! Welcome to the Association.'
+          : 'Form submitted. Your payment is being verified.'
       );
     } catch (err) {
       setServerMsg(err.response?.data?.message || 'Submission failed. Please try again.');
@@ -220,7 +175,7 @@ export default function FormPage() {
           <h2 className="text-xl font-bold text-gray-800 mb-2">Submitted Successfully!</h2>
           <p className="text-gray-600 mb-6 text-sm leading-relaxed">{serverMsg}</p>
           <button onClick={() => {
-            setSubmitted(false); setForm(INITIAL); setFile(null); setPreview(null);
+            setSubmitted(false); setForm(INITIAL);
             setPassport(null); setPassportPreview(null);
             setPaymentDone(false); setCashfreeOrderId(null);
           }} className="btn-primary w-full">Submit Another Response</button>
@@ -235,11 +190,8 @@ export default function FormPage() {
 
       {/* Header */}
       <div className="max-w-3xl mx-auto mb-4 md:mb-6 rounded-xl overflow-hidden shadow-lg">
-        <img
-          src="/header.jpeg"
-          alt="Telangana Commercial Taxes S.C./S.T. Employees Association"
-          className="w-full h-auto block"
-        />
+        <img src="/header.jpeg" alt="Telangana Commercial Taxes S.C./S.T. Employees Association"
+          className="w-full h-auto block" />
       </div>
 
       {/* Card */}
@@ -358,34 +310,47 @@ export default function FormPage() {
 
           {/* Payment */}
           <SectionHeader icon="💳" title="Payment — ₹1,000" />
-          <div className="px-3 md:px-6 py-3 md:py-5 space-y-4">
-
-            {/* Pay via Cashfree */}
-            <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-4">
-              <p className="text-xs text-gray-600 mb-3">
+          <div className="px-3 md:px-6 py-3 md:py-5">
+            <div className="rounded-xl border border-blue-100 bg-blue-50/40 p-4 space-y-3">
+              <p className="text-xs text-gray-600">
                 Pay <strong className="text-blue-700">₹{AMOUNT}</strong> membership fee securely via UPI, card, or net banking.
+                <span className="ml-1 text-red-500 font-semibold">Payment is required to submit the form.</span>
               </p>
 
+              {/* Status badge */}
+              <div>
+                {paymentDone ? (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-200">
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                    </svg>
+                    Paid — ₹{AMOUNT}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-red-100 text-red-600 border border-red-200">
+                    <svg className="w-3 h-3 fill-current" viewBox="0 0 8 8">
+                      <circle cx="4" cy="4" r="4" />
+                    </svg>
+                    Unpaid
+                  </span>
+                )}
+              </div>
+
+              {/* Pay button or success */}
               {paymentDone ? (
-                <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-4 py-3">
-                  <svg className="w-5 h-5 text-green-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-4 py-2.5">
+                  <svg className="w-4 h-4 text-green-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                   </svg>
                   <div>
-                    <p className="text-sm font-semibold text-green-700">Payment Successful — Paid</p>
-                    <p className="text-xs text-green-600">Order: {cashfreeOrderId}</p>
+                    <p className="text-sm font-semibold text-green-700">Payment Successful</p>
+                    <p className="text-xs text-green-600">Order ID: {cashfreeOrderId}</p>
                   </div>
                 </div>
               ) : (
-                <button
-                  type="button"
-                  onClick={handlePay}
-                  disabled={payingNow}
-                  className="flex items-center justify-center gap-2 w-full md:w-auto md:px-8 py-2.5 rounded-lg bg-blue-700 hover:bg-blue-800 text-white text-sm font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-                >
-                  {payingNow ? (
-                    <><Spin /> Processing…</>
-                  ) : (
+                <button type="button" onClick={handlePay} disabled={payingNow}
+                  className="flex items-center justify-center gap-2 w-full md:w-auto md:px-8 py-2.5 rounded-lg bg-blue-700 hover:bg-blue-800 text-white text-sm font-semibold transition-colors disabled:opacity-60 disabled:cursor-not-allowed">
+                  {payingNow ? <><Spin /> Processing…</> : (
                     <>
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -397,60 +362,8 @@ export default function FormPage() {
                 </button>
               )}
 
-              {payError && (
-                <p className="text-xs text-red-600 mt-2">{payError}</p>
-              )}
-            </div>
-
-            {/* Optional screenshot upload */}
-            <div>
-              <p className="text-xs text-gray-500 mb-2">
-                <span className="font-medium text-gray-600">OR</span> — if you already paid via UPI/bank transfer, upload the screenshot below <span className="text-gray-400">(optional)</span>.
-              </p>
-
-              {/* Payment status badge */}
-              <div className="mb-3">
-                {paymentDone ? (
-                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-200">
-                    ● Paid
-                  </span>
-                ) : file ? (
-                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700 border border-yellow-200">
-                    ● Pending Verification
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-600 border border-red-200">
-                    ● Unpaid
-                  </span>
-                )}
-              </div>
-
-              {!preview ? (
-                <label htmlFor="fileInput"
-                  className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed rounded-xl cursor-pointer transition-colors border-gray-200 hover:border-blue-400 hover:bg-blue-50 bg-gray-50/50">
-                  <svg className="w-8 h-8 text-gray-400 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  <span className="text-xs font-medium text-gray-500">Upload payment screenshot (optional)</span>
-                  <span className="text-xs text-gray-400 mt-0.5">JPEG or PNG</span>
-                  <input id="fileInput" ref={fileRef} type="file" accept="image/jpeg,image/jpg,image/png"
-                    className="hidden" onChange={handleFile} />
-                </label>
-              ) : (
-                <div className="relative inline-block max-w-full">
-                  <img src={preview} alt="preview"
-                    className="max-h-52 w-auto rounded-xl border-2 border-green-300 shadow-sm object-contain" />
-                  <button type="button" onClick={removeFile}
-                    className="absolute -top-2 -right-2 w-7 h-7 bg-red-600 text-white rounded-full flex items-center justify-center shadow hover:bg-red-700">
-                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                  <p className="text-xs text-green-600 font-medium mt-2">✓ Screenshot uploaded</p>
-                </div>
-              )}
-              {errors.file && <p className="field-error mt-2">{errors.file}</p>}
+              {payError && <p className="text-xs text-red-600">{payError}</p>}
+              {errors.payment && <p className="text-xs text-red-600 font-medium">{errors.payment}</p>}
             </div>
           </div>
 
@@ -461,8 +374,9 @@ export default function FormPage() {
           )}
 
           <div className="px-3 md:px-6 py-3 md:py-6 bg-gray-50 border-t border-gray-100 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-            <p className="text-xs text-gray-400">Fields marked <span className="text-red-500 font-semibold">*</span> are mandatory.</p>
-            <button type="submit" disabled={submitting} className="btn-primary w-full md:w-auto md:px-10">
+            <p className="text-xs text-gray-400">Fields marked <span className="text-red-500 font-semibold">*</span> are mandatory. Payment is required.</p>
+            <button type="submit" disabled={submitting || !paymentDone}
+              className={`btn-primary w-full md:w-auto md:px-10 ${!paymentDone ? 'opacity-50 cursor-not-allowed' : ''}`}>
               {submitting ? <><Spin /> Submitting…</> : <>
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />

@@ -32,8 +32,6 @@ function cfFetchOrder(orderId) {
 
 const upload     = require('../middleware/upload');
 const Submission = require('../models/Submission');
-const { extractTextFromImage, determinePaymentStatus } = require('../utils/ocr');
-const { getExpectedAmount } = require('../models/Settings');
 
 const formValidation = [
   body('name').trim().notEmpty().withMessage('Name is required').isLength({ max: 100 }).escape(),
@@ -73,27 +71,24 @@ router.post(
       const { name, parentsName, mobile, religion, caste, maritalStatus, designation, division, circle, educationQualifications, residenceAddress, interests } = req.body;
 
       const passportFile    = req.files?.passportPhoto?.[0];
-      const screenshotFile  = req.files?.paymentScreenshot?.[0];
       const cashfreeOrderId = req.body.cashfreeOrderId?.trim() || null;
 
       if (!passportFile) {
         return res.status(400).json({ success: false, message: 'Passport photo is required.' });
       }
+      if (!cashfreeOrderId) {
+        return res.status(400).json({ success: false, message: 'Payment is required before submitting.' });
+      }
 
-      const passportRelPath   = path.relative(path.join(__dirname, '..'), passportFile.path).replace(/\\/g, '/');
-      const screenshotRelPath = screenshotFile
-        ? path.relative(path.join(__dirname, '..'), screenshotFile.path).replace(/\\/g, '/')
-        : null;
+      const passportRelPath = path.relative(path.join(__dirname, '..'), passportFile.path).replace(/\\/g, '/');
 
-      // If paid via Cashfree, verify before saving
-      let initialStatus = 'Unpaid';
-      if (cashfreeOrderId) {
-        try {
-          const cfRes = await cfFetchOrder(cashfreeOrderId);
-          if (cfRes.order_status === 'PAID') initialStatus = 'Paid';
-        } catch (err) {
-          console.error('[Cashfree verify on submit] error:', err?.response?.data || err.message);
-        }
+      // Verify Cashfree payment
+      let paymentStatus = 'Unpaid';
+      try {
+        const cfRes = await cfFetchOrder(cashfreeOrderId);
+        if (cfRes.order_status === 'PAID') paymentStatus = 'Paid';
+      } catch (err) {
+        console.error('[Cashfree verify on submit] error:', err?.response?.data || err.message);
       }
 
       const submission = new Submission({
@@ -108,45 +103,17 @@ router.post(
         residenceAddress: residenceAddress || '',
         interests: interests || '',
         passportPhoto: passportRelPath,
-        paymentScreenshot: screenshotRelPath,
         cashfreeOrderId,
-        paymentStatus: initialStatus === 'Paid' ? 'Paid' : (screenshotFile ? 'Pending' : 'Unpaid'),
+        paymentStatus,
       });
 
       await submission.save();
 
-      // Respond immediately
       res.status(201).json({
         success: true,
         message: 'Form submitted successfully!',
         paymentStatus: submission.paymentStatus,
       });
-
-      // Run OCR in background only if screenshot was uploaded and not already paid via Cashfree
-      if (screenshotFile && initialStatus !== 'Paid') {
-        (async () => {
-          try {
-            const expectedAmount = await getExpectedAmount();
-            const { text, amount } = await extractTextFromImage(screenshotFile.path);
-
-            let paymentStatus = 'Invalid Screenshot';
-            let extractedAmount = null;
-
-            if (!text || text.trim().length < 10) {
-              paymentStatus = 'Invalid Screenshot';
-            } else {
-              const result = determinePaymentStatus(screenshotRelPath, amount, expectedAmount, text);
-              paymentStatus   = result.status;
-              extractedAmount = result.amount;
-            }
-
-            await submission.updateOne({ $set: { paymentStatus, extractedAmount, ocrText: text || '' } });
-          } catch (err) {
-            console.error('[OCR] error:', err.message);
-            await submission.updateOne({ $set: { paymentStatus: 'Invalid Screenshot' } });
-          }
-        })();
-      }
 
     } catch (error) {
       console.error('Submit form error:', error);
