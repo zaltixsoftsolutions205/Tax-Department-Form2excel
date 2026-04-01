@@ -25,6 +25,8 @@ const allowedOrigins = [
   process.env.CLIENT_URL,
   'http://localhost:5173',
   'http://localhost:3000',
+  'https://membershipdrive.in',
+  'https://www.membershipdrive.in',
 ].filter(Boolean);
 
 app.use(
