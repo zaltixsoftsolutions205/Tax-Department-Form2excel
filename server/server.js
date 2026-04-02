@@ -27,6 +27,7 @@ const allowedOrigins = [
   'http://localhost:3000',
   'https://membershipdrive.in',
   'https://www.membershipdrive.in',
+  'https://tctsmembershipdrive.zaltixsoftsolutions.com',
 ].filter(Boolean);
 
 app.use(

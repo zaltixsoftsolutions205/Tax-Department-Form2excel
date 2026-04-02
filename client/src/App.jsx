@@ -10,18 +10,17 @@ import ProtectedRoute from './components/ProtectedRoute';
 export default function App() {
   return (
     <Routes>
-      <Route path="/"            element={<Navigate to="/form" replace />} />
-      <Route path="/form"        element={<FormPage />} />
-      <Route path="/login"       element={<LoginPage />} />
-      <Route path="/contact"     element={<ContactPage />} />
-      <Route path="/terms"       element={<TermsPage />} />
-      <Route path="/refunds"     element={<RefundPage />} />
-      <Route path="/admin"       element={
+      <Route path="/"        element={<FormPage />} />
+      <Route path="/login"   element={<LoginPage />} />
+      <Route path="/contact" element={<ContactPage />} />
+      <Route path="/terms"   element={<TermsPage />} />
+      <Route path="/refunds" element={<RefundPage />} />
+      <Route path="/admin"   element={
         <ProtectedRoute>
           <AdminPage />
         </ProtectedRoute>
       } />
-      <Route path="*" element={<Navigate to="/form" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
