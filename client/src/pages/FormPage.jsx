@@ -16,13 +16,12 @@ import api from '../api';
 
 const AMOUNT = 500;
 
-// Bank / UPI account details for manual payment
+// Bank account details for manual payment
 const ACCOUNT = {
-  name:       'TCTS S.C./S.T. Employees Association',
-  bank:       'State Bank of India',
-  accountNo:  '1234567890',       // ← replace with real account number
-  ifsc:       'SBIN0001234',      // ← replace with real IFSC
-  upi:        'tcts@sbi',         // ← replace with real UPI ID
+  name:      'Telangana Commercial Taxes SC/ST Employees Association',
+  bank:      'Axis Bank — CCT Complex, Nampally',
+  accountNo: '925010044679607',
+  ifsc:      'UTIB0006036',
 };
 
 const INITIAL = {
@@ -329,7 +328,6 @@ export default function FormPage() {
                 <CopyRow label="Bank"           value={ACCOUNT.bank} />
                 <CopyRow label="Account Number" value={ACCOUNT.accountNo} mono />
                 <CopyRow label="IFSC Code"      value={ACCOUNT.ifsc} mono />
-                <CopyRow label="UPI ID"         value={ACCOUNT.upi} mono />
               </div>
             </div>
 
