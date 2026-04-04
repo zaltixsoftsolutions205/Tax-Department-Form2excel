@@ -3,35 +3,37 @@ const router  = express.Router();
 const path    = require('path');
 const multer  = require('multer');
 const { body, validationResult } = require('express-validator');
-const https = require('https');
 
-function cfFetchOrder(orderId) {
-  return new Promise((resolve, reject) => {
-    const options = {
-      hostname: 'api.cashfree.com',
-      path:     `/pg/orders/${orderId}`,
-      method:   'GET',
-      headers: {
-        'x-client-id':     process.env.CASHFREE_APP_ID,
-        'x-client-secret': process.env.CASHFREE_SECRET_KEY,
-        'x-api-version':   '2023-08-01',
-        'Content-Type':    'application/json',
-      },
-    };
-    const req = https.request(options, (res) => {
-      let data = '';
-      res.on('data', chunk => { data += chunk; });
-      res.on('end', () => {
-        try { resolve(JSON.parse(data)); } catch { resolve({}); }
-      });
-    });
-    req.on('error', reject);
-    req.end();
-  });
-}
+// /* ── Cashfree payment verification (commented out — gateway removed) ─────────
+// const https = require('https');
+// function cfFetchOrder(orderId) {
+//   return new Promise((resolve, reject) => {
+//     const options = {
+//       hostname: 'api.cashfree.com',
+//       path:     `/pg/orders/${orderId}`,
+//       method:   'GET',
+//       headers: {
+//         'x-client-id':     process.env.CASHFREE_APP_ID,
+//         'x-client-secret': process.env.CASHFREE_SECRET_KEY,
+//         'x-api-version':   '2023-08-01',
+//         'Content-Type':    'application/json',
+//       },
+//     };
+//     const req = https.request(options, (res) => {
+//       let data = '';
+//       res.on('data', chunk => { data += chunk; });
+//       res.on('end', () => { try { resolve(JSON.parse(data)); } catch { resolve({}); } });
+//     });
+//     req.on('error', reject);
+//     req.end();
+//   });
+// }
+// ── End Cashfree ─────────────────────────────────────────────────────────── */
 
 const upload     = require('../middleware/upload');
 const Submission = require('../models/Submission');
+const { extractTextFromImage, determinePaymentStatus } = require('../utils/ocr');
+const { getExpectedAmount } = require('../models/Settings');
 
 const formValidation = [
   body('name').trim().notEmpty().withMessage('Name is required').isLength({ max: 100 }).escape(),
@@ -70,27 +72,20 @@ router.post(
     try {
       const { name, parentsName, mobile, religion, caste, maritalStatus, designation, division, circle, educationQualifications, residenceAddress, interests } = req.body;
 
-      const passportFile    = req.files?.passportPhoto?.[0];
-      const cashfreeOrderId = req.body.cashfreeOrderId?.trim() || null;
+      const passportFile   = req.files?.passportPhoto?.[0];
+      const screenshotFile = req.files?.paymentScreenshot?.[0];
 
       if (!passportFile) {
         return res.status(400).json({ success: false, message: 'Passport photo is required.' });
       }
-      if (!cashfreeOrderId) {
-        return res.status(400).json({ success: false, message: 'Payment is required before submitting.' });
+      if (!screenshotFile) {
+        return res.status(400).json({ success: false, message: 'Payment screenshot is required.' });
       }
 
-      const passportRelPath = path.relative(path.join(__dirname, '..'), passportFile.path).replace(/\\/g, '/');
+      const passportRelPath   = path.relative(path.join(__dirname, '..'), passportFile.path).replace(/\\/g, '/');
+      const screenshotRelPath = path.relative(path.join(__dirname, '..'), screenshotFile.path).replace(/\\/g, '/');
 
-      // Verify Cashfree payment
-      let paymentStatus = 'Unpaid';
-      try {
-        const cfRes = await cfFetchOrder(cashfreeOrderId);
-        if (cfRes.order_status === 'PAID') paymentStatus = 'Paid';
-      } catch (err) {
-        console.error('[Cashfree verify on submit] error:', err?.response?.data || err.message);
-      }
-
+      // Save with Pending first — OCR runs after response
       const submission = new Submission({
         name, parentsName, mobile,
         religion: religion || '',
@@ -102,18 +97,39 @@ router.post(
         educationQualifications,
         residenceAddress: residenceAddress || '',
         interests: interests || '',
-        passportPhoto: passportRelPath,
-        cashfreeOrderId,
-        paymentStatus,
+        passportPhoto:     passportRelPath,
+        paymentScreenshot: screenshotRelPath,
+        paymentStatus:     'Pending',
       });
 
       await submission.save();
 
-      res.status(201).json({
-        success: true,
-        message: 'Form submitted successfully!',
-        paymentStatus: submission.paymentStatus,
-      });
+      // Respond immediately
+      res.status(201).json({ success: true, message: 'Form submitted successfully!', paymentStatus: 'Pending' });
+
+      // Run OCR in background
+      (async () => {
+        try {
+          const expectedAmount = await getExpectedAmount();
+          const { text, amount } = await extractTextFromImage(screenshotFile.path);
+
+          let paymentStatus = 'Invalid Screenshot';
+          let extractedAmount = null;
+
+          if (!text || text.trim().length < 10) {
+            paymentStatus = 'Invalid Screenshot';
+          } else {
+            const result = determinePaymentStatus(screenshotRelPath, amount, expectedAmount, text);
+            paymentStatus   = result.status;
+            extractedAmount = result.amount;
+          }
+
+          await submission.updateOne({ $set: { paymentStatus, extractedAmount, ocrText: text || '' } });
+        } catch (err) {
+          console.error('[OCR] error:', err.message);
+          await submission.updateOne({ $set: { paymentStatus: 'Invalid Screenshot' } });
+        }
+      })();
 
     } catch (error) {
       console.error('Submit form error:', error);
