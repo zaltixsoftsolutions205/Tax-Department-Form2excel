@@ -25,6 +25,7 @@ const ACCOUNT = {
 };
 
 const INITIAL = {
+  employeeId: '',
   name: '', parentsName: '', mobile: '', maritalStatus: '',
   designation: '', division: '', circle: '',
   educationQualifications: '', residenceAddress: '', interests: '',
@@ -128,6 +129,7 @@ export default function FormPage() {
 
   const validate = () => {
     const e = {};
+    if (!form.employeeId.trim())               e.employeeId = 'Required';
     if (!form.name.trim())                    e.name = 'Required';
     if (!form.parentsName.trim())             e.parentsName = 'Required';
     if (!form.mobile.trim())                  e.mobile = 'Required';
@@ -207,6 +209,11 @@ export default function FormPage() {
           {/* Personal Details */}
           <SectionHeader icon="👤" title="Personal Details" />
           <div className="px-3 md:px-6 py-3 md:py-5 grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-5">
+            <F label="Employee ID" required error={errors.employeeId}>
+              <input type="text" name="employeeId" value={form.employeeId} onChange={handleChange}
+                placeholder="Enter your Employee ID"
+                className={`field-input ${errors.employeeId ? 'field-input-error' : ''}`} />
+            </F>
             <F label="Full Name" required error={errors.name}>
               <input type="text" name="name" value={form.name} onChange={handleChange}
                 placeholder="Enter your full name"
@@ -401,7 +408,15 @@ export default function FormPage() {
         </form>
       </div>
 
-      <p className="text-center text-xs text-gray-400 mt-4 md:mt-6">
+      <div className="max-w-3xl mx-auto mt-4 md:mt-5 rounded-xl bg-yellow-50 border-l-4 border-yellow-400 px-4 py-3">
+        <p className="text-xs font-bold text-yellow-700 uppercase tracking-wide mb-1">Note</p>
+        <p className="text-xs text-gray-700">
+          For further queries, contact <span className="font-semibold text-gray-900">A. Anand Kumar</span>{' '}
+          <a href="tel:9398774991" className="font-semibold text-blue-700 underline">9398774991</a>
+        </p>
+      </div>
+
+      <p className="text-center text-xs text-gray-400 mt-3 md:mt-4">
         Telangana Commercial Taxes S.C./S.T. Employees Association &copy; {new Date().getFullYear()}
       </p>
     </div>

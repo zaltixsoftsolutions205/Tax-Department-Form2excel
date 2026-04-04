@@ -34,7 +34,7 @@ async function generateExcel(submissions) {
   });
 
   // Title row (row 1)
-  ws.mergeCells('A1:P1');
+  ws.mergeCells('A1:Q1');
   const titleCell = ws.getCell('A1');
   titleCell.value =
     'TELANGANA COMMERCIAL TAXES S.C./S.T. EMPLOYEES ASSOCIATION – Submissions';
@@ -46,6 +46,7 @@ async function generateExcel(submissions) {
   // Column definitions
   ws.columns = [
     { key: 'sno',                    width: 6  },
+    { key: 'employeeId',             width: 18 },
     { key: 'name',                   width: 22 },
     { key: 'parentsName',            width: 22 },
     { key: 'mobile',                 width: 16 },
@@ -64,7 +65,7 @@ async function generateExcel(submissions) {
   ];
 
   const HEADERS = [
-    'S.No', 'Name', "Parent's Name", 'Mobile', 'Religion', 'Caste', 'Marital Status',
+    'S.No', 'Employee ID', 'Name', "Parent's Name", 'Mobile', 'Religion', 'Caste', 'Marital Status',
     'Designation', 'Division', 'Circle', 'Education Qualifications',
     'Residence Address', 'Interests / Hobbies',
     'Extracted Amount (₹)', 'Payment Status', 'Submitted At',
@@ -85,6 +86,7 @@ async function generateExcel(submissions) {
     const isEven = idx % 2 === 0;
     const row = ws.addRow({
       sno:                    idx + 1,
+      employeeId:             sub.employeeId || '—',
       name:                   sub.name,
       parentsName:            sub.parentsName,
       mobile:                 sub.mobile          || '—',

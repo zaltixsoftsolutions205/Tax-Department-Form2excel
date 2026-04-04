@@ -36,6 +36,7 @@ const { extractTextFromImage, determinePaymentStatus } = require('../utils/ocr')
 const { getExpectedAmount } = require('../models/Settings');
 
 const formValidation = [
+  body('employeeId').trim().notEmpty().withMessage('Employee ID is required').isLength({ max: 50 }).escape(),
   body('name').trim().notEmpty().withMessage('Name is required').isLength({ max: 100 }).escape(),
   body('parentsName').trim().notEmpty().withMessage("Parent's name is required").isLength({ max: 100 }).escape(),
   body('mobile').trim().notEmpty().withMessage('Mobile number is required')
@@ -70,7 +71,7 @@ router.post(
     }
 
     try {
-      const { name, parentsName, mobile, religion, caste, maritalStatus, designation, division, circle, educationQualifications, residenceAddress, interests } = req.body;
+      const { employeeId, name, parentsName, mobile, religion, caste, maritalStatus, designation, division, circle, educationQualifications, residenceAddress, interests } = req.body;
 
       const passportFile   = req.files?.passportPhoto?.[0];
       const screenshotFile = req.files?.paymentScreenshot?.[0];
@@ -87,6 +88,7 @@ router.post(
 
       // Save with Pending first — OCR runs after response
       const submission = new Submission({
+        employeeId,
         name, parentsName, mobile,
         religion: religion || '',
         caste: caste || '',

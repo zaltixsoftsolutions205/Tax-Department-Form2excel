@@ -1,10 +1,12 @@
 const express = require('express');
 const router  = express.Router();
 const { param, body, query, validationResult } = require('express-validator');
+const path    = require('path');
 
 const Submission    = require('../models/Submission');
 const { generateExcel } = require('../utils/excel');
 const { getExpectedAmount, setExpectedAmount } = require('../models/Settings');
+const { extractTextFromImage, determinePaymentStatus } = require('../utils/ocr');
 
 // ── Helper: build Mongo query from request query-string ───────────────────────
 function buildQuery(reqQuery) {
@@ -173,6 +175,44 @@ router.patch(
     } catch (err) {
       console.error('Update status error:', err);
       res.status(500).json({ success: false, message: 'Server error' });
+    }
+  }
+);
+
+// ── POST /api/admin/submissions/:id/rerun-ocr ─────────────────────────────────
+router.post(
+  '/submissions/:id/rerun-ocr',
+  [param('id').isMongoId().withMessage('Invalid submission ID')],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty())
+      return res.status(400).json({ success: false, message: errors.array()[0].msg });
+
+    try {
+      const sub = await Submission.findById(req.params.id);
+      if (!sub) return res.status(404).json({ success: false, message: 'Submission not found' });
+      if (!sub.paymentScreenshot)
+        return res.status(400).json({ success: false, message: 'No screenshot on file' });
+
+      const screenshotPath = path.join(__dirname, '..', sub.paymentScreenshot);
+      const expectedAmount = await getExpectedAmount();
+      const { text, amount } = await extractTextFromImage(screenshotPath);
+
+      let paymentStatus  = 'Invalid Screenshot';
+      let extractedAmount = null;
+
+      if (text && text.trim().length >= 10) {
+        const result = determinePaymentStatus(sub.paymentScreenshot, amount, expectedAmount, text);
+        paymentStatus   = result.status;
+        extractedAmount = result.amount;
+      }
+
+      await sub.updateOne({ $set: { paymentStatus, extractedAmount, ocrText: text || '', manualOverride: false } });
+
+      res.json({ success: true, data: { paymentStatus, extractedAmount } });
+    } catch (err) {
+      console.error('Re-run OCR error:', err.message);
+      res.status(500).json({ success: false, message: 'OCR failed' });
     }
   }
 );

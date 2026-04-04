@@ -2,6 +2,14 @@ const mongoose = require('mongoose');
 
 const submissionSchema = new mongoose.Schema(
   {
+    // Employee ID
+    employeeId: {
+      type: String,
+      required: [true, 'Employee ID is required'],
+      trim: true,
+      maxlength: [50, 'Employee ID cannot exceed 50 characters'],
+    },
+
     // Personal Details
     name: {
       type: String,

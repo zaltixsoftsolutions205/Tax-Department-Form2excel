@@ -219,12 +219,21 @@ function StatusDropdown({ currentStatus, submissionId, onUpdated }) {
 }
 
 // ── Mobile Card ───────────────────────────────────────────────────────────────
-function MobileCard({ sub, idx, expanded, onToggle, onStatusUpdated, onViewImage, onDelete }) {
+function MobileCard({ sub, idx, expanded, onToggle, onStatusUpdated, onViewImage, onDelete, onRerunOcr }) {
+  const [ocring, setOcring] = useState(false);
+  const rerun = async () => {
+    setOcring(true);
+    await onRerunOcr(sub._id);
+    setOcring(false);
+  };
   return (
     <div className="p-3 border-b border-gray-100 last:border-0">
       <div className="flex items-start justify-between gap-2 mb-1.5">
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-gray-800 truncate">{idx + 1}. {sub.name}</p>
+          {sub.employeeId && (
+            <p className="text-xs text-blue-600 font-mono mt-0.5">ID: {sub.employeeId}</p>
+          )}
           <p className="text-xs text-gray-500 mt-0.5 truncate">
             {sub.designation || '—'} · {sub.division || '—'}
           </p>
@@ -246,6 +255,12 @@ function MobileCard({ sub, idx, expanded, onToggle, onStatusUpdated, onViewImage
           {sub.paymentScreenshot && (
             <button onClick={() => onViewImage(imgUrl(sub.paymentScreenshot))}
               className="text-xs text-blue-600 underline">Receipt</button>
+          )}
+          {sub.paymentScreenshot && (
+            <button onClick={rerun} disabled={ocring}
+              className="text-xs text-purple-600 underline">
+              {ocring ? 'Running…' : 'Re-OCR'}
+            </button>
           )}
           <button onClick={onToggle} className="text-xs text-blue-600 underline">
             {expanded ? 'Less ▲' : 'More ▼'}
@@ -347,6 +362,19 @@ export default function AdminPage() {
     setSubmissions(prev => prev.map(s => s._id === id ? { ...s, paymentStatus: status, manualOverride: true } : s));
   }, []);
 
+  const handleRerunOcr = useCallback(async (id) => {
+    try {
+      const { data } = await api.post(`/api/admin/submissions/${id}/rerun-ocr`);
+      if (data.success) {
+        setSubmissions(prev => prev.map(s => s._id === id
+          ? { ...s, paymentStatus: data.data.paymentStatus, extractedAmount: data.data.extractedAmount, manualOverride: false }
+          : s));
+      }
+    } catch {
+      alert('OCR re-run failed.');
+    }
+  }, []);
+
   const handleDelete = useCallback(async (id, name) => {
     if (!window.confirm(`Delete submission by "${name}"? This cannot be undone.`)) return;
     try {
@@ -360,7 +388,7 @@ export default function AdminPage() {
   const displayed = submissions.filter(s => {
     if (!search.trim()) return true;
     const q = search.toLowerCase();
-    return ['name','mobile','designation','division','circle','residenceAddress']
+    return ['employeeId','name','mobile','designation','division','circle','residenceAddress']
       .some(k => s[k]?.toLowerCase().includes(q));
   });
 
@@ -552,7 +580,8 @@ export default function AdminPage() {
                     onToggle={() => setExpandedId(id => id === sub._id ? null : sub._id)}
                     onStatusUpdated={handleStatusUpdated}
                     onViewImage={setImgModal}
-                    onDelete={handleDelete} />
+                    onDelete={handleDelete}
+                    onRerunOcr={handleRerunOcr} />
                 ))}
               </div>
 
@@ -561,7 +590,7 @@ export default function AdminPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-gray-50 border-b border-gray-200 text-left">
-                      {['#','Name',"Parent's Name",'Mobile','Religion / Caste','Marital Status',
+                      {['#','Emp ID','Name',"Parent's Name",'Mobile','Religion / Caste','Marital Status',
                         'Designation','Division / Circle','Education','Address',
                         'Amount (₹)','Status','Screenshot','Date','',''].map(h => (
                         <th key={h} className="px-3 py-2.5 text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">{h}</th>
@@ -575,6 +604,7 @@ export default function AdminPage() {
                           className={`hover:bg-blue-50/40 cursor-pointer transition-colors ${expandedId === sub._id ? 'bg-blue-50/60' : ''}`}
                           onClick={() => setExpandedId(id => id === sub._id ? null : sub._id)}>
                           <td className="px-3 py-2.5 text-gray-400 text-xs">{idx + 1}</td>
+                          <td className="px-3 py-2.5 text-blue-700 font-mono text-xs whitespace-nowrap">{sub.employeeId || '—'}</td>
                           <td className="px-3 py-2.5 font-medium text-gray-800 whitespace-nowrap">{sub.name}</td>
                           <td className="px-3 py-2.5 text-gray-600 whitespace-nowrap">{sub.parentsName}</td>
                           <td className="px-3 py-2.5 text-gray-600 whitespace-nowrap font-mono text-xs">{sub.mobile || '—'}</td>
@@ -594,9 +624,12 @@ export default function AdminPage() {
                             {sub.manualOverride && <span className="ml-1 text-[10px] text-purple-600">(edited)</span>}
                           </td>
                           <td className="px-3 py-2.5" onClick={e => e.stopPropagation()}>
-                            {sub.paymentScreenshot
-                              ? <button onClick={() => setImgModal(imgUrl(sub.paymentScreenshot))} className="text-blue-600 hover:text-blue-800 text-xs underline font-medium">View</button>
-                              : <span className="text-gray-400 text-xs">None</span>}
+                            {sub.paymentScreenshot ? (
+                              <div className="flex flex-col gap-1">
+                                <button onClick={() => setImgModal(imgUrl(sub.paymentScreenshot))} className="text-blue-600 hover:text-blue-800 text-xs underline font-medium">View</button>
+                                <OcrButton id={sub._id} onRerun={handleRerunOcr} />
+                              </div>
+                            ) : <span className="text-gray-400 text-xs">None</span>}
                           </td>
                           <td className="px-3 py-2.5 text-gray-500 text-xs whitespace-nowrap">{fmtDate(sub.submittedAt)}</td>
                           <td className="px-3 py-2.5">
@@ -614,8 +647,9 @@ export default function AdminPage() {
                         </tr>
                         {expandedId === sub._id && (
                           <tr key={`${sub._id}-detail`} className="bg-blue-50/40">
-                            <td colSpan={15} className="px-5 py-3">
-                              <div className="grid grid-cols-3 gap-4 text-sm">
+                            <td colSpan={17} className="px-5 py-3">
+                              <div className="grid grid-cols-4 gap-4 text-sm">
+                                <Detail label="Employee ID" value={sub.employeeId || '—'} />
                                 <Detail label="Interests / Hobbies" value={sub.interests || '—'} />
                                 <Detail label="Full Address" value={sub.residenceAddress || '—'} />
                                 <Detail label="OCR Text" value={sub.ocrText ? sub.ocrText.substring(0, 200) + '…' : 'N/A'} mono />
@@ -636,6 +670,22 @@ export default function AdminPage() {
 
       {imgModal && <ImageModal src={imgModal} onClose={() => setImgModal(null)} />}
     </div>
+  );
+}
+
+function OcrButton({ id, onRerun }) {
+  const [busy, setBusy] = useState(false);
+  const run = async (e) => {
+    e.stopPropagation();
+    setBusy(true);
+    await onRerun(id);
+    setBusy(false);
+  };
+  return (
+    <button onClick={run} disabled={busy}
+      className="text-purple-600 hover:text-purple-800 text-xs underline font-medium">
+      {busy ? 'Running…' : 'Re-run OCR'}
+    </button>
   );
 }
 
