@@ -1,4 +1,10 @@
 Options -MultiViews
 RewriteEngine On
+
+# Let static assets pass through directly
+RewriteRule \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot|map|webp)$ - [L]
+
+# For everything else, serve index.html
 RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule ^ index.html [QSA,L]
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.html [L]
