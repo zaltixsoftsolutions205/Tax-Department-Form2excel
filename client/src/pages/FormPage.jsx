@@ -405,7 +405,7 @@ export default function FormPage() {
 
           <div className="px-3 md:px-6 py-3 md:py-6 bg-gray-50 border-t border-gray-100 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
             <p className="text-xs text-gray-400">Fields marked <span className="text-red-500 font-semibold">*</span> are mandatory.</p>
-            <button type="submit" disabled={submitting} className="btn-primary w-full md:w-auto md:px-10">
+            <button type="submit" disabled={submitting || !file} className={`btn-primary w-full md:w-auto md:px-10 ${!file ? 'opacity-50 cursor-not-allowed' : ''}`}>
               {submitting ? <><Spin /> Submitting…</> : <>
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
