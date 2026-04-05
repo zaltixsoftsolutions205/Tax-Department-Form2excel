@@ -29,7 +29,7 @@ const INITIAL = {
   name: '', parentsName: '', mobile: '', maritalStatus: '',
   designation: '', division: '', circle: '',
   educationQualifications: '', residenceAddress: '', interests: '',
-  religion: '', caste: '',
+  religion: '', caste: '', subCaste: '',
 };
 
 export default function FormPage() {
@@ -244,6 +244,10 @@ export default function FormPage() {
             <F label="Caste" error={errors.caste}>
               <input type="text" name="caste" value={form.caste} onChange={handleChange}
                 placeholder="Enter your caste" className="field-input" />
+            </F>
+            <F label="Sub Caste" error={errors.subCaste}>
+              <input type="text" name="subCaste" value={form.subCaste} onChange={handleChange}
+                placeholder="Enter your sub caste" className="field-input" />
             </F>
           </div>
 

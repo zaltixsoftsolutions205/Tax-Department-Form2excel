@@ -52,6 +52,7 @@ async function generateExcel(submissions) {
     { key: 'mobile',                 width: 16 },
     { key: 'religion',               width: 12 },
     { key: 'caste',                  width: 12 },
+    { key: 'subCaste',               width: 14 },
     { key: 'maritalStatus',          width: 14 },
     { key: 'designation',            width: 22 },
     { key: 'division',               width: 18 },
@@ -65,7 +66,7 @@ async function generateExcel(submissions) {
   ];
 
   const HEADERS = [
-    'S.No', 'Employee ID', 'Name', "Parent's Name", 'Mobile', 'Religion', 'Caste', 'Marital Status',
+    'S.No', 'Employee ID', 'Name', "Parent's Name", 'Mobile', 'Religion', 'Caste', 'Sub Caste', 'Marital Status',
     'Designation', 'Division', 'Circle', 'Education Qualifications',
     'Residence Address', 'Interests / Hobbies',
     'Extracted Amount (₹)', 'Payment Status', 'Submitted At',
@@ -92,6 +93,7 @@ async function generateExcel(submissions) {
       mobile:                 sub.mobile          || '—',
       religion:               sub.religion        || '—',
       caste:                  sub.caste           || '—',
+      subCaste:               sub.subCaste        || '—',
       maritalStatus:          sub.maritalStatus,
       designation:            sub.designation     || '—',
       division:               sub.division        || '—',

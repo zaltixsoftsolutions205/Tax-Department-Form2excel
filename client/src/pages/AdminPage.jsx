@@ -276,7 +276,7 @@ function MobileCard({ sub, idx, expanded, onToggle, onStatusUpdated, onViewImage
         <div className="mt-2 bg-gray-50 rounded-lg p-2.5 grid grid-cols-2 gap-x-3 gap-y-2">
           <KV label="Parent's Name"  v={sub.parentsName} />
           <KV label="Mobile"         v={sub.mobile || '—'} />
-          <KV label="Religion/Caste" v={`${sub.religion || '—'} / ${sub.caste || '—'}`} />
+          <KV label="Religion/Caste" v={`${sub.religion || '—'} / ${sub.caste || '—'}${sub.subCaste ? ` (${sub.subCaste})` : ''}`} />
           <KV label="Marital Status" v={sub.maritalStatus} />
           <KV label="Circle"         v={sub.circle || '—'} />
           <KV label="Education"      v={sub.educationQualifications} />
@@ -608,7 +608,7 @@ export default function AdminPage() {
                           <td className="px-3 py-2.5 font-medium text-gray-800 whitespace-nowrap">{sub.name}</td>
                           <td className="px-3 py-2.5 text-gray-600 whitespace-nowrap">{sub.parentsName}</td>
                           <td className="px-3 py-2.5 text-gray-600 whitespace-nowrap font-mono text-xs">{sub.mobile || '—'}</td>
-                          <td className="px-3 py-2.5 text-gray-600 whitespace-nowrap">{sub.religion || '—'} / {sub.caste || '—'}</td>
+                          <td className="px-3 py-2.5 text-gray-600 whitespace-nowrap">{sub.religion || '—'} / {sub.caste || '—'}{sub.subCaste ? ` (${sub.subCaste})` : ''}</td>
                           <td className="px-3 py-2.5 text-gray-600 whitespace-nowrap">{sub.maritalStatus}</td>
                           <td className="px-3 py-2.5 text-gray-600 whitespace-nowrap">{sub.designation || '—'}</td>
                           <td className="px-3 py-2.5 text-gray-600 whitespace-nowrap">

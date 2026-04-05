@@ -41,6 +41,12 @@ const submissionSchema = new mongoose.Schema(
       maxlength: [50, 'Caste cannot exceed 50 characters'],
       default: '',
     },
+    subCaste: {
+      type: String,
+      trim: true,
+      maxlength: [50, 'Sub Caste cannot exceed 50 characters'],
+      default: '',
+    },
     maritalStatus: {
       type: String,
       required: [true, 'Marital status is required'],

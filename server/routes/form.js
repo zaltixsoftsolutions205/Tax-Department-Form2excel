@@ -49,6 +49,7 @@ const formValidation = [
   body('residenceAddress').optional().trim().isLength({ max: 500 }).escape(),
   body('religion').optional().trim().isLength({ max: 50 }).escape(),
   body('caste').optional().trim().isLength({ max: 50 }).escape(),
+  body('subCaste').optional().trim().isLength({ max: 50 }).escape(),
   body('interests').optional().trim().isLength({ max: 300 }).escape(),
 ];
 
@@ -71,7 +72,7 @@ router.post(
     }
 
     try {
-      const { employeeId, name, parentsName, mobile, religion, caste, maritalStatus, designation, division, circle, educationQualifications, residenceAddress, interests } = req.body;
+      const { employeeId, name, parentsName, mobile, religion, caste, subCaste, maritalStatus, designation, division, circle, educationQualifications, residenceAddress, interests } = req.body;
 
       const passportFile   = req.files?.passportPhoto?.[0];
       const screenshotFile = req.files?.paymentScreenshot?.[0];
@@ -92,6 +93,7 @@ router.post(
         name, parentsName, mobile,
         religion: religion || '',
         caste: caste || '',
+        subCaste: subCaste || '',
         maritalStatus,
         designation: designation || '',
         division: division || '',
