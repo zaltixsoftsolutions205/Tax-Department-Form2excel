@@ -27,6 +27,7 @@ const allowedOrigins = [
   'http://localhost:3000',
   'https://membershipdrive.in',
   'https://www.membershipdrive.in',
+  'https://tcts.membershipdrive.in',
   'https://tctsmembershipdrive.zaltixsoftsolutions.com',
 ].filter(Boolean);
 
@@ -75,12 +76,23 @@ app.use((err, _req, res, _next) => {
 // ── Connect to MongoDB then start server ──────────────────────────────────────
 const PORT = parseInt(process.env.PORT || '5000', 10);
 
+async function seedAdmin() {
+  const Admin = require('./models/Admin');
+  const email = 'tgscstassociationctdept@gmail.com';
+  const exists = await Admin.findOne({ email });
+  if (!exists) {
+    await Admin.create({ name: 'TCTS Admin', email, password: 'TCTS@2024' });
+    console.log('✅ Admin account created:', email);
+  }
+}
+
 mongoose
   .connect(process.env.MONGO_URI, {
     serverSelectionTimeoutMS: 5000,
   })
-  .then(() => {
+  .then(async () => {
     console.log('✅ Connected to MongoDB');
+    await seedAdmin();
     app.listen(PORT, () => {
       console.log(`🚀 Server running on http://localhost:${PORT}`);
       console.log(`   Form  → http://localhost:5173/form`);
