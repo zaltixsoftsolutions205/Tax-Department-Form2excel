@@ -93,10 +93,9 @@ async function seedSettings() {
   const amount = parseInt(process.env.EXPECTED_AMOUNT || '500', 10);
   await Settings.findOneAndUpdate(
     { key: 'global' },
-    { $set: { expectedAmount: amount } },
+    { $setOnInsert: { expectedAmount: amount } },
     { upsert: true }
   );
-  console.log(`✅ Payment amount set to ₹${amount}`);
 }
 
 mongoose
