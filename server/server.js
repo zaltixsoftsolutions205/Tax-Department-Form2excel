@@ -88,6 +88,17 @@ async function seedAdmin() {
   }
 }
 
+async function seedSettings() {
+  const { Settings } = require('./models/Settings');
+  const amount = parseInt(process.env.EXPECTED_AMOUNT || '500', 10);
+  await Settings.findOneAndUpdate(
+    { key: 'global' },
+    { $set: { expectedAmount: amount } },
+    { upsert: true }
+  );
+  console.log(`✅ Payment amount set to ₹${amount}`);
+}
+
 mongoose
   .connect(process.env.MONGO_URI, {
     serverSelectionTimeoutMS: 5000,
@@ -95,6 +106,7 @@ mongoose
   .then(async () => {
     console.log('✅ Connected to MongoDB');
     await seedAdmin();
+    await seedSettings();
     app.listen(PORT, () => {
       console.log(`🚀 Server running on http://localhost:${PORT}`);
       console.log(`   Form  → http://localhost:5173/form`);
