@@ -231,9 +231,6 @@ function MobileCard({ sub, idx, expanded, onToggle, onStatusUpdated, onViewImage
       <div className="flex items-start justify-between gap-2 mb-1.5">
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-gray-800 truncate">{idx + 1}. {sub.name}</p>
-          {sub.employeeId && (
-            <p className="text-xs text-blue-600 font-mono mt-0.5">ID: {sub.employeeId}</p>
-          )}
           <p className="text-xs text-gray-500 mt-0.5 truncate">
             {sub.designation || '—'} · {sub.division || '—'}
           </p>
@@ -248,13 +245,13 @@ function MobileCard({ sub, idx, expanded, onToggle, onStatusUpdated, onViewImage
 
       <div className="flex items-center justify-between">
         <span className="text-xs text-gray-600">
-          Amount: <strong>{sub.extractedAmount != null ? `₹${sub.extractedAmount}` : '—'}</strong>
+          Amount: <strong>{sub.extractedAmount != null ? `₹${sub.extractedAmount}` : sub.cashfreeOrderId ? '₹500' : '—'}</strong>
           {sub.manualOverride && <span className="text-purple-600 ml-1 text-[10px]">(edited)</span>}
         </span>
         <div className="flex items-center gap-3">
           {sub.paymentScreenshot && (
             <button onClick={() => onViewImage(imgUrl(sub.paymentScreenshot))}
-              className="text-xs text-blue-600 underline">Receipt</button>
+              className="text-xs text-blue-600 underline">Screenshot</button>
           )}
           {sub.paymentScreenshot && (
             <button onClick={rerun} disabled={ocring}
@@ -274,14 +271,13 @@ function MobileCard({ sub, idx, expanded, onToggle, onStatusUpdated, onViewImage
 
       {expanded && (
         <div className="mt-2 bg-gray-50 rounded-lg p-2.5 grid grid-cols-2 gap-x-3 gap-y-2">
-          <KV label="Parent's Name"  v={sub.parentsName} />
-          <KV label="Mobile"         v={sub.mobile || '—'} />
-          <KV label="Religion/Caste" v={`${sub.religion || '—'} / ${sub.caste || '—'}${sub.subCaste ? ` (${sub.subCaste})` : ''}`} />
-          <KV label="Marital Status" v={sub.maritalStatus} />
-          <KV label="Circle"         v={sub.circle || '—'} />
-          <KV label="Education"      v={sub.educationQualifications} />
-          <KV label="Address"        v={sub.residenceAddress || '—'} full />
-          {sub.interests && <KV label="Interests" v={sub.interests} full />}
+          <KV label="Parent's Name" v={sub.parentsName || '—'} />
+          <KV label="Mobile"        v={sub.mobile || '—'} />
+          <KV label="Caste"         v={sub.caste || '—'} />
+          <KV label="Circle"        v={sub.circle || '—'} />
+          {sub.cashfreeOrderId && (
+            <KV label="Cashfree Order ID" v={sub.cashfreeOrderId} full />
+          )}
         </div>
       )}
     </div>
@@ -388,7 +384,7 @@ export default function AdminPage() {
   const displayed = submissions.filter(s => {
     if (!search.trim()) return true;
     const q = search.toLowerCase();
-    return ['employeeId','name','mobile','designation','division','circle','residenceAddress']
+    return ['name','mobile','designation','division','circle']
       .some(k => s[k]?.toLowerCase().includes(q));
   });
 
@@ -590,9 +586,9 @@ export default function AdminPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-gray-50 border-b border-gray-200 text-left">
-                      {['#','Emp ID','Name',"Parent's Name",'Mobile','Religion / Caste','Marital Status',
-                        'Designation','Division / Circle','Education','Address',
-                        'Amount (₹)','Status','Screenshot','Date','',''].map(h => (
+                      {['#','Name',"Parent's Name",'Mobile','Caste',
+                        'Designation','Division / Circle',
+                        'Amount (₹)','Status','Payment Ref','Date','',''].map(h => (
                         <th key={h} className="px-3 py-2.5 text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap">{h}</th>
                       ))}
                     </tr>
@@ -604,18 +600,14 @@ export default function AdminPage() {
                           className={`hover:bg-blue-50/40 cursor-pointer transition-colors ${expandedId === sub._id ? 'bg-blue-50/60' : ''}`}
                           onClick={() => setExpandedId(id => id === sub._id ? null : sub._id)}>
                           <td className="px-3 py-2.5 text-gray-400 text-xs">{idx + 1}</td>
-                          <td className="px-3 py-2.5 text-blue-700 font-mono text-xs whitespace-nowrap">{sub.employeeId || '—'}</td>
                           <td className="px-3 py-2.5 font-medium text-gray-800 whitespace-nowrap">{sub.name}</td>
-                          <td className="px-3 py-2.5 text-gray-600 whitespace-nowrap">{sub.parentsName}</td>
+                          <td className="px-3 py-2.5 text-gray-600 whitespace-nowrap">{sub.parentsName || '—'}</td>
                           <td className="px-3 py-2.5 text-gray-600 whitespace-nowrap font-mono text-xs">{sub.mobile || '—'}</td>
-                          <td className="px-3 py-2.5 text-gray-600 whitespace-nowrap">{sub.religion || '—'} / {sub.caste || '—'}{sub.subCaste ? ` (${sub.subCaste})` : ''}</td>
-                          <td className="px-3 py-2.5 text-gray-600 whitespace-nowrap">{sub.maritalStatus}</td>
+                          <td className="px-3 py-2.5 text-gray-600 whitespace-nowrap">{sub.caste || '—'}</td>
                           <td className="px-3 py-2.5 text-gray-600 whitespace-nowrap">{sub.designation || '—'}</td>
                           <td className="px-3 py-2.5 text-gray-600 whitespace-nowrap">
                             {sub.division || '—'}{sub.circle && <span className="text-gray-400"> / {sub.circle}</span>}
                           </td>
-                          <td className="px-3 py-2.5 text-gray-600 max-w-[130px] truncate">{sub.educationQualifications}</td>
-                          <td className="px-3 py-2.5 text-gray-600 max-w-[150px] truncate">{sub.residenceAddress || '—'}</td>
                           <td className="px-3 py-2.5 font-semibold text-gray-800 whitespace-nowrap">
                             {sub.extractedAmount != null ? `₹${sub.extractedAmount}` : '—'}
                           </td>
@@ -626,10 +618,15 @@ export default function AdminPage() {
                           <td className="px-3 py-2.5" onClick={e => e.stopPropagation()}>
                             {sub.paymentScreenshot ? (
                               <div className="flex flex-col gap-1">
-                                <button onClick={() => setImgModal(imgUrl(sub.paymentScreenshot))} className="text-blue-600 hover:text-blue-800 text-xs underline font-medium">View</button>
+                                <button onClick={() => setImgModal(imgUrl(sub.paymentScreenshot))}
+                                  className="text-blue-600 hover:text-blue-800 text-xs underline font-medium">View</button>
                                 <OcrButton id={sub._id} onRerun={handleRerunOcr} />
                               </div>
-                            ) : <span className="text-gray-400 text-xs">None</span>}
+                            ) : sub.cashfreeOrderId ? (
+                              <CopyOrderId orderId={sub.cashfreeOrderId} />
+                            ) : (
+                              <span className="text-gray-400 text-xs">—</span>
+                            )}
                           </td>
                           <td className="px-3 py-2.5 text-gray-500 text-xs whitespace-nowrap">{fmtDate(sub.submittedAt)}</td>
                           <td className="px-3 py-2.5">
@@ -647,12 +644,17 @@ export default function AdminPage() {
                         </tr>
                         {expandedId === sub._id && (
                           <tr key={`${sub._id}-detail`} className="bg-blue-50/40">
-                            <td colSpan={17} className="px-5 py-3">
-                              <div className="grid grid-cols-4 gap-4 text-sm">
-                                <Detail label="Employee ID" value={sub.employeeId || '—'} />
-                                <Detail label="Interests / Hobbies" value={sub.interests || '—'} />
-                                <Detail label="Full Address" value={sub.residenceAddress || '—'} />
-                                <Detail label="OCR Text" value={sub.ocrText ? sub.ocrText.substring(0, 200) + '…' : 'N/A'} mono />
+                            <td colSpan={13} className="px-5 py-3">
+                              <div className="flex flex-wrap gap-6 text-sm">
+                                {sub.cashfreeOrderId && (
+                                  <Detail label="Cashfree Order ID" value={sub.cashfreeOrderId} mono />
+                                )}
+                                {sub.ocrText && (
+                                  <Detail label="OCR Text" value={sub.ocrText.substring(0, 200) + '…'} mono />
+                                )}
+                                {!sub.cashfreeOrderId && !sub.ocrText && (
+                                  <Detail label="Payment Reference" value="—" />
+                                )}
                               </div>
                             </td>
                           </tr>
@@ -696,6 +698,28 @@ function Detail({ label, value, mono }) {
       <p className={`text-gray-700 text-xs leading-relaxed ${mono ? 'font-mono bg-gray-100 p-2 rounded text-[11px]' : ''}`}>
         {value}
       </p>
+    </div>
+  );
+}
+
+function CopyOrderId({ orderId }) {
+  const [copied, setCopied] = useState(false);
+  const copy = (e) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(orderId).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  };
+  return (
+    <div className="flex flex-col gap-0.5">
+      <span className="text-[10px] text-gray-400 font-mono truncate max-w-[110px]" title={orderId}>
+        {orderId.slice(0, 18)}…
+      </span>
+      <button onClick={copy}
+        className={`text-[10px] underline ${copied ? 'text-green-600' : 'text-blue-500 hover:text-blue-700'}`}>
+        {copied ? '✓ Copied' : 'Copy ID'}
+      </button>
     </div>
   );
 }

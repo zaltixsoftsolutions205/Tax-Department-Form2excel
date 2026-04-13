@@ -34,7 +34,7 @@ async function generateExcel(submissions) {
   });
 
   // Title row (row 1)
-  ws.mergeCells('A1:Q1');
+  ws.mergeCells('A1:J1');
   const titleCell = ws.getCell('A1');
   titleCell.value =
     'TELANGANA COMMERCIAL TAXES S.C./S.T. EMPLOYEES ASSOCIATION – Submissions';
@@ -45,30 +45,22 @@ async function generateExcel(submissions) {
 
   // Column definitions
   ws.columns = [
-    { key: 'sno',                    width: 6  },
-    { key: 'employeeId',             width: 18 },
-    { key: 'name',                   width: 22 },
-    { key: 'parentsName',            width: 22 },
-    { key: 'mobile',                 width: 16 },
-    { key: 'religion',               width: 12 },
-    { key: 'caste',                  width: 12 },
-    { key: 'subCaste',               width: 14 },
-    { key: 'maritalStatus',          width: 14 },
-    { key: 'designation',            width: 22 },
-    { key: 'division',               width: 18 },
-    { key: 'circle',                 width: 18 },
-    { key: 'educationQualifications',width: 26 },
-    { key: 'residenceAddress',       width: 32 },
-    { key: 'interests',              width: 26 },
-    { key: 'extractedAmount',        width: 20 },
-    { key: 'paymentStatus',          width: 26 },
-    { key: 'submittedAt',            width: 22 },
+    { key: 'sno',             width: 6  },
+    { key: 'name',            width: 22 },
+    { key: 'parentsName',     width: 22 },
+    { key: 'mobile',          width: 16 },
+    { key: 'caste',           width: 10 },
+    { key: 'designation',     width: 22 },
+    { key: 'division',        width: 18 },
+    { key: 'circle',          width: 18 },
+    { key: 'extractedAmount', width: 20 },
+    { key: 'paymentStatus',   width: 26 },
+    { key: 'submittedAt',     width: 22 },
   ];
 
   const HEADERS = [
-    'S.No', 'Employee ID', 'Name', "Parent's Name", 'Mobile', 'Religion', 'Caste', 'Sub Caste', 'Marital Status',
-    'Designation', 'Division', 'Circle', 'Education Qualifications',
-    'Residence Address', 'Interests / Hobbies',
+    'S.No', 'Name', "Parent's Name", 'Mobile', 'Caste',
+    'Designation', 'Division', 'Circle',
     'Extracted Amount (₹)', 'Payment Status', 'Submitted At',
   ];
 
@@ -86,24 +78,17 @@ async function generateExcel(submissions) {
   submissions.forEach((sub, idx) => {
     const isEven = idx % 2 === 0;
     const row = ws.addRow({
-      sno:                    idx + 1,
-      employeeId:             sub.employeeId || '—',
-      name:                   sub.name,
-      parentsName:            sub.parentsName,
-      mobile:                 sub.mobile          || '—',
-      religion:               sub.religion        || '—',
-      caste:                  sub.caste           || '—',
-      subCaste:               sub.subCaste        || '—',
-      maritalStatus:          sub.maritalStatus,
-      designation:            sub.designation     || '—',
-      division:               sub.division        || '—',
-      circle:                 sub.circle          || '—',
-      educationQualifications:sub.educationQualifications,
-      residenceAddress:       sub.residenceAddress || '—',
-      interests:              sub.interests        || '—',
-      extractedAmount:        sub.extractedAmount != null ? sub.extractedAmount : 'N/A',
-      paymentStatus:          sub.paymentStatus,
-      submittedAt:            new Date(sub.submittedAt).toLocaleString('en-IN', {
+      sno:             idx + 1,
+      name:            sub.name,
+      parentsName:     sub.parentsName  || '—',
+      mobile:          sub.mobile       || '—',
+      caste:           sub.caste        || '—',
+      designation:     sub.designation  || '—',
+      division:        sub.division     || '—',
+      circle:          sub.circle       || '—',
+      extractedAmount: sub.extractedAmount != null ? sub.extractedAmount : 'N/A',
+      paymentStatus:   sub.paymentStatus,
+      submittedAt:     new Date(sub.submittedAt).toLocaleString('en-IN', {
         day: '2-digit', month: '2-digit', year: 'numeric',
         hour: '2-digit', minute: '2-digit',
       }),

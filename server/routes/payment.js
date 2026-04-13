@@ -1,6 +1,7 @@
 const express = require('express');
 const router  = express.Router();
 const https   = require('https');
+const { getExpectedAmount } = require('../models/Settings');
 
 const CF_BASE    = 'api.cashfree.com';
 const CF_VERSION = '2023-08-01';
@@ -50,10 +51,12 @@ router.post('/create-order', async (req, res) => {
   const orderId = `order_${Date.now()}_${mobile.slice(-4)}`;
 
   try {
-    const clientUrl = (process.env.CLIENT_URL || '').replace(/^http:/, 'https:') || 'https://localhost:5173';
+    const amount    = await getExpectedAmount();
+    // Always use HTTPS for return_url — Cashfree rejects http/local URLs
+    const clientUrl = (process.env.CLIENT_URL || 'https://zaltixsoftsolutions.com').replace(/^http:\/\//, 'https://');
     const data = await cfRequest('POST', '/pg/orders', {
       order_id:       orderId,
-      order_amount:   1000,
+      order_amount:   amount,
       order_currency: 'INR',
       customer_details: {
         customer_id:    mobile,
@@ -61,7 +64,7 @@ router.post('/create-order', async (req, res) => {
         customer_phone: mobile,
       },
       order_meta: {
-        return_url: `${clientUrl}/form`,
+        return_url: `${clientUrl}/form/`,
       },
     });
 
@@ -71,8 +74,12 @@ router.post('/create-order', async (req, res) => {
       paymentSessionId: data.payment_session_id,
     });
   } catch (err) {
-    console.error('Cashfree create-order error:', err?.data || err.message);
-    res.status(500).json({ success: false, message: 'Failed to create payment order.' });
+    const cfMsg = err?.data?.message || err?.data || err.message || 'Unknown error';
+    console.error('Cashfree create-order error:', cfMsg);
+    res.status(500).json({
+      success: false,
+      message: `Payment order creation failed: ${typeof cfMsg === 'string' ? cfMsg : JSON.stringify(cfMsg)}`,
+    });
   }
 });
 

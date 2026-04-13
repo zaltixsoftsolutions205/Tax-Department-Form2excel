@@ -18,8 +18,8 @@ api.interceptors.response.use(
     if (err.response?.status === 401) {
       localStorage.removeItem('adminToken');
       localStorage.removeItem('adminUser');
-      if (window.location.pathname.startsWith('/admin')) {
-        window.location.href = '/login';
+      if (window.location.pathname.includes('/admin')) {
+        window.location.href = '/form/login';
       }
     }
     return Promise.reject(err);

@@ -1,145 +1,97 @@
-const express = require('express');
-const router  = express.Router();
-const path    = require('path');
-const multer  = require('multer');
+const express  = require('express');
+const router   = express.Router();
+const https    = require('https');
 const { body, validationResult } = require('express-validator');
 
-// /* ── Cashfree payment verification (commented out — gateway removed) ─────────
-// const https = require('https');
-// function cfFetchOrder(orderId) {
-//   return new Promise((resolve, reject) => {
-//     const options = {
-//       hostname: 'api.cashfree.com',
-//       path:     `/pg/orders/${orderId}`,
-//       method:   'GET',
-//       headers: {
-//         'x-client-id':     process.env.CASHFREE_APP_ID,
-//         'x-client-secret': process.env.CASHFREE_SECRET_KEY,
-//         'x-api-version':   '2023-08-01',
-//         'Content-Type':    'application/json',
-//       },
-//     };
-//     const req = https.request(options, (res) => {
-//       let data = '';
-//       res.on('data', chunk => { data += chunk; });
-//       res.on('end', () => { try { resolve(JSON.parse(data)); } catch { resolve({}); } });
-//     });
-//     req.on('error', reject);
-//     req.end();
-//   });
-// }
-// ── End Cashfree ─────────────────────────────────────────────────────────── */
-
-const upload     = require('../middleware/upload');
 const Submission = require('../models/Submission');
-const { extractTextFromImage, determinePaymentStatus } = require('../utils/ocr');
-const { getExpectedAmount } = require('../models/Settings');
 
+/* ── Verify Cashfree order status ───────────────────────────────────────── */
+function verifyCashfreeOrder(orderId) {
+  return new Promise((resolve) => {
+    const options = {
+      hostname: 'api.cashfree.com',
+      path:     `/pg/orders/${orderId}`,
+      method:   'GET',
+      headers: {
+        'x-client-id':     process.env.CASHFREE_APP_ID,
+        'x-client-secret': process.env.CASHFREE_SECRET_KEY,
+        'x-api-version':   '2023-08-01',
+        'Content-Type':    'application/json',
+      },
+    };
+    const req = https.request(options, (res) => {
+      let data = '';
+      res.on('data', chunk => { data += chunk; });
+      res.on('end', () => {
+        try {
+          const parsed = JSON.parse(data);
+          resolve(parsed.order_status || 'UNKNOWN');
+        } catch { resolve('UNKNOWN'); }
+      });
+    });
+    req.on('error', () => resolve('UNKNOWN'));
+    req.end();
+  });
+}
+
+/* ── Validation ─────────────────────────────────────────────────────────── */
 const formValidation = [
-  body('employeeId').trim().notEmpty().withMessage('Employee ID is required').isLength({ max: 50 }).escape(),
   body('name').trim().notEmpty().withMessage('Name is required').isLength({ max: 100 }).escape(),
-  body('parentsName').trim().notEmpty().withMessage("Parent's name is required").isLength({ max: 100 }).escape(),
+  body('parentsName').optional({ checkFalsy: true }).trim().isLength({ max: 100 }).escape(),
   body('mobile').trim().notEmpty().withMessage('Mobile number is required')
     .matches(/^[6-9]\d{9}$/).withMessage('Enter a valid 10-digit mobile number'),
-  body('maritalStatus').isIn(['Married', 'Unmarried']).withMessage('Invalid marital status'),
+  body('caste').optional({ checkFalsy: true }).trim().isIn(['SC', 'ST']).withMessage('Caste must be SC or ST'),
   body('designation').trim().notEmpty().withMessage('Designation is required').isLength({ max: 100 }).escape(),
   body('division').trim().notEmpty().withMessage('Division is required').isLength({ max: 100 }).escape(),
   body('circle').trim().notEmpty().withMessage('Circle is required').isLength({ max: 100 }).escape(),
-  body('educationQualifications').trim().notEmpty().withMessage('Education qualifications are required').isLength({ max: 500 }).escape(),
-  body('residenceAddress').optional().trim().isLength({ max: 500 }).escape(),
-  body('religion').optional().trim().isLength({ max: 50 }).escape(),
-  body('caste').optional().trim().isLength({ max: 50 }).escape(),
-  body('subCaste').optional().trim().isLength({ max: 50 }).escape(),
-  body('interests').optional().trim().isLength({ max: 300 }).escape(),
+  body('cashfreeOrderId').trim().notEmpty().withMessage('Payment order ID is required'),
 ];
 
-router.post(
-  '/submit-form',
-  (req, res, next) => {
-    upload.fields([{ name: 'passportPhoto', maxCount: 1 }, { name: 'paymentScreenshot', maxCount: 1 }])(req, res, (err) => {
-      if (err instanceof multer.MulterError) {
-        return res.status(400).json({ success: false, message: err.code === 'LIMIT_FILE_SIZE' ? 'File size must be under 2 MB' : err.message });
-      }
-      if (err) return res.status(400).json({ success: false, message: err.message });
-      next();
+/* ── POST /api/submit-form ──────────────────────────────────────────────── */
+router.post('/submit-form', formValidation, async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      success: false,
+      message: 'Validation failed',
+      errors:  errors.array().map(e => ({ field: e.path, message: e.msg })),
     });
-  },
-  formValidation,
-  async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ success: false, message: 'Validation failed', errors: errors.array().map(e => ({ field: e.path, message: e.msg })) });
-    }
-
-    try {
-      const { employeeId, name, parentsName, mobile, religion, caste, subCaste, maritalStatus, designation, division, circle, educationQualifications, residenceAddress, interests } = req.body;
-
-      const passportFile   = req.files?.passportPhoto?.[0];
-      const screenshotFile = req.files?.paymentScreenshot?.[0];
-
-      if (!passportFile) {
-        return res.status(400).json({ success: false, message: 'Passport photo is required.' });
-      }
-      if (!screenshotFile) {
-        return res.status(400).json({ success: false, message: 'Payment screenshot is required.' });
-      }
-
-      const passportRelPath   = path.relative(path.join(__dirname, '..'), passportFile.path).replace(/\\/g, '/');
-      const screenshotRelPath = path.relative(path.join(__dirname, '..'), screenshotFile.path).replace(/\\/g, '/');
-
-      // Save with Pending first — OCR runs after response
-      const submission = new Submission({
-        employeeId,
-        name, parentsName, mobile,
-        religion: religion || '',
-        caste: caste || '',
-        subCaste: subCaste || '',
-        maritalStatus,
-        designation: designation || '',
-        division: division || '',
-        circle: circle || '',
-        educationQualifications,
-        residenceAddress: residenceAddress || '',
-        interests: interests || '',
-        passportPhoto:     passportRelPath,
-        paymentScreenshot: screenshotRelPath,
-        paymentStatus:     'Pending',
-      });
-
-      await submission.save();
-
-      // Respond immediately
-      res.status(201).json({ success: true, message: 'Form submitted successfully!', paymentStatus: 'Pending' });
-
-      // Run OCR in background
-      (async () => {
-        try {
-          const expectedAmount = await getExpectedAmount();
-          const { text, amount } = await extractTextFromImage(screenshotFile.path);
-
-          let paymentStatus = 'Invalid Screenshot';
-          let extractedAmount = null;
-
-          if (!text || text.trim().length < 10) {
-            paymentStatus = 'Invalid Screenshot';
-          } else {
-            const result = determinePaymentStatus(screenshotRelPath, amount, expectedAmount, text);
-            paymentStatus   = result.status;
-            extractedAmount = result.amount;
-          }
-
-          await submission.updateOne({ $set: { paymentStatus, extractedAmount, ocrText: text || '' } });
-        } catch (err) {
-          console.error('[OCR] error:', err.message);
-          await submission.updateOne({ $set: { paymentStatus: 'Invalid Screenshot' } });
-        }
-      })();
-
-    } catch (error) {
-      console.error('Submit form error:', error);
-      return res.status(500).json({ success: false, message: 'An unexpected server error occurred. Please try again.' });
-    }
   }
-);
+
+  const { name, parentsName, mobile, caste, designation, division, circle, cashfreeOrderId } = req.body;
+
+  try {
+    /* Verify payment status with Cashfree */
+    const cfStatus     = await verifyCashfreeOrder(cashfreeOrderId);
+    const paymentStatus = cfStatus === 'PAID' ? 'Paid' : 'Pending';
+
+    const submission = new Submission({
+      name,
+      parentsName:    parentsName || '',
+      mobile,
+      caste:          caste || '',
+      designation,
+      division,
+      circle,
+      cashfreeOrderId,
+      paymentStatus,
+    });
+
+    await submission.save();
+
+    return res.status(201).json({
+      success: true,
+      message: 'Form submitted successfully!',
+      paymentStatus,
+    });
+
+  } catch (error) {
+    console.error('Submit form error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'An unexpected error occurred. Please try again.',
+    });
+  }
+});
 
 module.exports = router;
