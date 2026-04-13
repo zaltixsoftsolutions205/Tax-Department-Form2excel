@@ -47,6 +47,17 @@ const formValidation = [
   body('cashfreeOrderId').trim().notEmpty().withMessage('Payment order ID is required'),
 ];
 
+/* ── GET /api/membership-amount ────────────────────────────────────────── */
+const { getExpectedAmount } = require('../models/Settings');
+router.get('/membership-amount', async (_req, res) => {
+  try {
+    const amount = await getExpectedAmount();
+    res.json({ success: true, amount });
+  } catch {
+    res.json({ success: true, amount: 500 });
+  }
+});
+
 /* ── POST /api/submit-form ──────────────────────────────────────────────── */
 router.post('/submit-form', formValidation, async (req, res) => {
   const errors = validationResult(req);

@@ -1,7 +1,5 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import api from '../api';
-
-const AMOUNT = 500;
 
 const INITIAL = {
   name: '', parentsName: '', mobile: '',
@@ -31,6 +29,13 @@ export default function FormPage() {
   const [payError,      setPayError]      = useState('');
   const [payStep,       setPayStep]       = useState('idle'); // idle | creating | checkout
   const [paidOrderId,   setPaidOrderId]   = useState(null);  // set after payment succeeds
+  const [amount,        setAmount]        = useState(null);  // fetched from server
+
+  useEffect(() => {
+    api.get('/api/membership-amount')
+      .then(r => setAmount(r.data.amount))
+      .catch(() => setAmount(500));
+  }, []);
 
   const handleChange = useCallback((e) => {
     const { name, value } = e.target;
@@ -105,16 +110,15 @@ export default function FormPage() {
     setPayError('');
 
     try {
-      const fd = new FormData();
-      Object.entries(form).forEach(([k, v]) => fd.append(k, v));
-      fd.append('cashfreeOrderId', paidOrderId);
-
-      const { data } = await api.post('/api/submit-form', fd);
+      const { data } = await api.post('/api/submit-form', {
+        ...form,
+        cashfreeOrderId: paidOrderId,
+      });
 
       setSubmitted(true);
       setServerMsg(
         data.paymentStatus === 'Paid'
-          ? `Payment of ₹${AMOUNT} verified! Welcome to the Association.`
+          ? `Payment of ₹${displayAmount} verified! Welcome to the Association.`
           : 'Form submitted. Admin will confirm your payment shortly.'
       );
     } catch (err) {
@@ -128,7 +132,7 @@ export default function FormPage() {
 
   /* ── Step label ── */
   const stepLabel = {
-    idle:     `Pay ₹${AMOUNT}`,
+    idle:     `Pay ₹${displayAmount}`,
     creating: 'Creating order…',
     checkout: 'Opening payment…',
   }[payStep];
@@ -156,6 +160,7 @@ export default function FormPage() {
 
   const busy = paying || submitting;
   const paymentDone = !!paidOrderId;
+  const displayAmount = amount ?? '…';
 
   /* ── Form ────────────────────────────────────────────────────────────────── */
   return (
@@ -221,13 +226,13 @@ export default function FormPage() {
           </div>
 
           {/* Payment */}
-          <SectionHeader icon="💳" title={`Payment — ₹${AMOUNT}`} />
+          <SectionHeader icon="💳" title={`Payment — ₹${displayAmount}`} />
           <div className="px-3 md:px-6 py-3 md:py-5 space-y-4">
 
             {/* Payment info box */}
             <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-4">
               <p className="text-sm font-semibold text-blue-800 mb-1">
-                Membership Fee: <span className="text-blue-600 text-base">₹{AMOUNT}</span>
+                Membership Fee: <span className="text-blue-600 text-base">₹{displayAmount}</span>
               </p>
               <p className="text-xs text-gray-500">
                 Click the button below to pay securely via UPI, Net Banking, Credit/Debit Card, or Wallet.
@@ -238,7 +243,7 @@ export default function FormPage() {
             {/* ── Manual bank transfer (commented out — replaced by Cashfree) ──
             <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-4">
               <p className="text-xs font-semibold text-blue-800 uppercase tracking-wide mb-3">
-                Pay ₹{AMOUNT} to the following account
+                Pay ₹{amount} to the following account
               </p>
               <div className="flex flex-col gap-2">
                 <CopyRow label="Account Name"   value="Telangana Commercial Taxes SC/ST Employees Association" />
@@ -278,7 +283,7 @@ export default function FormPage() {
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  Payment of ₹{AMOUNT} Received
+                  Payment of ₹{displayAmount} Received
                 </>
               ) : (
                 <>
@@ -286,7 +291,7 @@ export default function FormPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                       d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                   </svg>
-                  Pay ₹{AMOUNT}
+                  Pay ₹{displayAmount}
                 </>
               )}
             </button>
