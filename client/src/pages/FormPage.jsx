@@ -110,11 +110,10 @@ export default function FormPage() {
     setPayError('');
 
     try {
-      const fd = new FormData();
-      Object.entries(form).forEach(([k, v]) => fd.append(k, v));
-      fd.append('cashfreeOrderId', paidOrderId);
-
-      const { data } = await api.post('/api/submit-form', fd);
+      const { data } = await api.post('/api/submit-form',
+        JSON.stringify({ ...form, cashfreeOrderId: paidOrderId }),
+        { headers: { 'Content-Type': 'application/json' } }
+      );
 
       setSubmitted(true);
       setServerMsg(
