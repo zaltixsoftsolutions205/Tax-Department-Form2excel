@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import api from '../api';
 
 const INITIAL = {
@@ -30,6 +30,18 @@ export default function FormPage() {
   const [payStep,       setPayStep]       = useState('idle'); // idle | creating | checkout
   const [paidOrderId,   setPaidOrderId]   = useState(null);  // set after payment succeeds
   const [amount,        setAmount]        = useState(null);  // fetched from server
+  const formRef = useRef(null);
+
+  /* Read all input/select values from DOM — catches browser autofill */
+  const getFormValues = useCallback(() => {
+    const el = formRef.current;
+    if (!el) return form;
+    const vals = { ...form };
+    el.querySelectorAll('input[name], select[name]').forEach(input => {
+      vals[input.name] = input.value;
+    });
+    return vals;
+  }, [form]);
 
   useEffect(() => {
     api.get('/api/membership-amount')
@@ -44,15 +56,15 @@ export default function FormPage() {
     setPayError('');
   }, []);
 
-  const validate = () => {
+  const validate = (vals) => {
     const e = {};
-    if (!form.name.trim())        e.name        = 'Required';
-    if (!form.mobile.trim())      e.mobile      = 'Required';
-    else if (!/^[6-9]\d{9}$/.test(form.mobile.trim()))
+    if (!vals.name.trim())        e.name        = 'Required';
+    if (!vals.mobile.trim())      e.mobile      = 'Required';
+    else if (!/^[6-9]\d{9}$/.test(vals.mobile.trim()))
                                   e.mobile      = 'Enter a valid 10-digit mobile number';
-    if (!form.designation.trim()) e.designation = 'Required';
-    if (!form.division.trim())    e.division    = 'Required';
-    if (!form.circle.trim())      e.circle      = 'Required';
+    if (!vals.designation.trim()) e.designation = 'Required';
+    if (!vals.division.trim())    e.division    = 'Required';
+    if (!vals.circle.trim())      e.circle      = 'Required';
     return e;
   };
 
@@ -61,7 +73,9 @@ export default function FormPage() {
     e.preventDefault();
     setPayError('');
 
-    const errs = validate();
+    const vals = getFormValues();
+    setForm(vals); // sync autofilled values into state
+    const errs = validate(vals);
     if (Object.keys(errs).length) { setErrors(errs); return; }
 
     setPaying(true);
@@ -69,8 +83,8 @@ export default function FormPage() {
     try {
       setPayStep('creating');
       const orderRes = await api.post('/api/payment/create-order', {
-        name:   form.name.trim(),
-        mobile: form.mobile.trim(),
+        name:   vals.name.trim(),
+        mobile: vals.mobile.trim(),
       });
       const { orderId, paymentSessionId } = orderRes.data;
 
@@ -176,7 +190,7 @@ export default function FormPage() {
 
       {/* Card */}
       <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
-        <form onSubmit={handlePay} noValidate>
+        <form ref={formRef} onSubmit={handlePay} noValidate>
 
           {/* Personal Details */}
           <SectionHeader icon="👤" title="Personal Details" />
