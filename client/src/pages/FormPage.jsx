@@ -1,5 +1,14 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import api from '../api';
+
+const BANK = {
+  name:    'Telangana Commercial Taxes SC/ST Employees Association',
+  bank:    'Axis Bank — CCT Complex, Nampally',
+  account: '925010044679607',
+  ifsc:    'UTIB0006036',
+};
+
+const AMOUNT = 500;
 
 const INITIAL = {
   name: '', parentsName: '', mobile: '',
@@ -7,54 +16,45 @@ const INITIAL = {
   caste: '',
 };
 
-/* Load Cashfree JS SDK from CDN */
-function loadCashfreeSDK() {
-  return new Promise((resolve, reject) => {
-    if (window.Cashfree) { resolve(window.Cashfree); return; }
-    const script = document.createElement('script');
-    script.src = 'https://sdk.cashfree.com/js/v3/cashfree.js';
-    script.onload  = () => window.Cashfree ? resolve(window.Cashfree) : reject(new Error('SDK not available'));
-    script.onerror = () => reject(new Error('Failed to load payment SDK. Check your connection.'));
-    document.head.appendChild(script);
-  });
-}
-
 export default function FormPage() {
-  const [form,          setForm]          = useState(INITIAL);
-  const [errors,        setErrors]        = useState({});
-  const [paying,        setPaying]        = useState(false);
-  const [submitting,    setSubmitting]    = useState(false);
-  const [submitted,     setSubmitted]     = useState(false);
-  const [serverMsg,     setServerMsg]     = useState('');
-  const [payError,      setPayError]      = useState('');
-  const [payStep,       setPayStep]       = useState('idle'); // idle | creating | checkout
-  const [paidOrderId,   setPaidOrderId]   = useState(null);  // set after payment succeeds
-  const [amount,        setAmount]        = useState(null);  // fetched from server
+  const [form,        setForm]        = useState(INITIAL);
+  const [screenshot,  setScreenshot]  = useState(null);
+  const [errors,      setErrors]      = useState({});
+  const [submitting,  setSubmitting]  = useState(false);
+  const [submitted,   setSubmitted]   = useState(false);
+  const [serverMsg,   setServerMsg]   = useState('');
+  const [submitError, setSubmitError] = useState('');
   const formRef = useRef(null);
 
-  /* Read all input/select values from DOM — catches browser autofill */
+  /* Read DOM values — catches browser autofill */
   const getFormValues = useCallback(() => {
     const el = formRef.current;
     if (!el) return form;
     const vals = { ...form };
-    el.querySelectorAll('input[name], select[name]').forEach(input => {
-      vals[input.name] = input.value;
+    el.querySelectorAll('input[name], select[name]').forEach(inp => {
+      vals[inp.name] = inp.value;
     });
     return vals;
   }, [form]);
-
-  useEffect(() => {
-    api.get('/api/membership-amount')
-      .then(r => setAmount(r.data.amount))
-      .catch(() => setAmount(500));
-  }, []);
 
   const handleChange = useCallback((e) => {
     const { name, value } = e.target;
     setForm(p => ({ ...p, [name]: value }));
     setErrors(p => ({ ...p, [name]: '' }));
-    setPayError('');
+    setSubmitError('');
   }, []);
+
+  const handleFile = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setErrors(p => ({ ...p, screenshot: 'File too large. Max 5 MB.' }));
+        return;
+      }
+      setScreenshot(file);
+      setErrors(p => ({ ...p, screenshot: '' }));
+    }
+  };
 
   const validate = (vals) => {
     const e = {};
@@ -65,95 +65,38 @@ export default function FormPage() {
     if (!vals.designation.trim()) e.designation = 'Required';
     if (!vals.division.trim())    e.division    = 'Required';
     if (!vals.circle.trim())      e.circle      = 'Required';
+    if (!screenshot)              e.screenshot  = 'Please upload your payment screenshot';
     return e;
   };
 
-  /* ── Step 1: Pay ── */
-  const handlePay = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setPayError('');
+    setSubmitError('');
 
     const vals = getFormValues();
-    setForm(vals); // sync autofilled values into state
+    setForm(vals);
     const errs = validate(vals);
     if (Object.keys(errs).length) { setErrors(errs); return; }
 
-    setPaying(true);
-
-    try {
-      setPayStep('creating');
-      const orderRes = await api.post('/api/payment/create-order', {
-        name:   vals.name.trim(),
-        mobile: vals.mobile.trim(),
-      });
-      const { orderId, paymentSessionId } = orderRes.data;
-
-      setPayStep('checkout');
-      const CashfreeSDK = await loadCashfreeSDK();
-      const cashfree    = CashfreeSDK({ mode: 'production' });
-
-      const result = await cashfree.checkout({
-        paymentSessionId,
-        redirectTarget: '_modal',
-      });
-
-      if (result.error) {
-        setPayError(result.error.message || 'Payment was not completed. Please try again.');
-        return;
-      }
-
-      /* Payment done — unlock Submit button */
-      setPaidOrderId(orderId);
-      setPayError('');
-
-    } catch (err) {
-      const msg = err.response?.data?.message
-        || (err.message.includes('SDK') ? err.message : 'Something went wrong. Please try again.');
-      const detail = err.response?.data?.errors;
-      setPayError(detail?.length ? detail.map(d => d.message).join(' • ') : msg);
-    } finally {
-      setPaying(false);
-      setPayStep('idle');
-    }
-  };
-
-  /* ── Step 2: Submit ── */
-  const handleSubmit = async () => {
-    if (!paidOrderId) return;
     setSubmitting(true);
-    setPayError('');
-
     try {
-      const { data } = await api.post('/api/submit-form',
-        JSON.stringify({ ...form, cashfreeOrderId: paidOrderId }),
-        { headers: { 'Content-Type': 'application/json' } }
-      );
+      const fd = new FormData();
+      Object.entries(vals).forEach(([k, v]) => fd.append(k, v));
+      fd.append('paymentScreenshot', screenshot);
 
+      const { data } = await api.post('/api/submit-form', fd);
       setSubmitted(true);
-      setServerMsg(
-        data.paymentStatus === 'Paid'
-          ? `Payment of ₹${displayAmount} verified! Welcome to the Association.`
-          : 'Form submitted. Admin will confirm your payment shortly.'
-      );
+      setServerMsg(data.message || 'Form submitted successfully!');
     } catch (err) {
       const msg = err.response?.data?.message || 'Submission failed. Please try again.';
       const detail = err.response?.data?.errors;
-      setPayError(detail?.length ? detail.map(d => d.message).join(' • ') : msg);
+      setSubmitError(detail?.length ? detail.map(d => d.message).join(' • ') : msg);
     } finally {
       setSubmitting(false);
     }
   };
 
-  const displayAmount = amount ?? '…';
-
-  /* ── Step label ── */
-  const stepLabel = {
-    idle:     `Pay ₹${displayAmount}`,
-    creating: 'Creating order…',
-    checkout: 'Opening payment…',
-  }[payStep];
-
-  /* ── Success ─────────────────────────────────────────────────────────────── */
+  /* ── Success ── */
   if (submitted) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
@@ -166,18 +109,15 @@ export default function FormPage() {
           <h2 className="text-xl font-bold text-gray-800 mb-2">Submitted Successfully!</h2>
           <p className="text-gray-600 mb-6 text-sm leading-relaxed">{serverMsg}</p>
           <button onClick={() => {
-            setSubmitted(false); setForm(INITIAL);
-            setErrors({}); setServerMsg(''); setPayError('');
+            setSubmitted(false); setForm(INITIAL); setScreenshot(null);
+            setErrors({}); setServerMsg(''); setSubmitError('');
           }} className="btn-primary w-full">Submit Another Response</button>
         </div>
       </div>
     );
   }
 
-  const busy = paying || submitting;
-  const paymentDone = !!paidOrderId;
-
-  /* ── Form ────────────────────────────────────────────────────────────────── */
+  /* ── Form ── */
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-4 md:py-8 px-3 md:px-4">
 
@@ -190,29 +130,29 @@ export default function FormPage() {
 
       {/* Card */}
       <div className="max-w-3xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden">
-        <form ref={formRef} onSubmit={handlePay} noValidate>
+        <form ref={formRef} onSubmit={handleSubmit} noValidate>
 
           {/* Personal Details */}
           <SectionHeader icon="👤" title="Personal Details" />
           <div className="px-3 md:px-6 py-3 md:py-5 grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-5">
             <F label="Full Name" required error={errors.name}>
               <input type="text" name="name" value={form.name} onChange={handleChange}
-                placeholder="Enter your full name" disabled={busy}
+                placeholder="Enter your full name" disabled={submitting}
                 className={`field-input ${errors.name ? 'field-input-error' : ''}`} />
             </F>
             <F label="Parent's Name" error={errors.parentsName}>
               <input type="text" name="parentsName" value={form.parentsName} onChange={handleChange}
-                placeholder="Father's / Mother's name" disabled={busy}
+                placeholder="Father's / Mother's name" disabled={submitting}
                 className="field-input" />
             </F>
             <F label="Mobile Number" required error={errors.mobile}>
               <input type="tel" name="mobile" value={form.mobile} onChange={handleChange}
-                placeholder="10-digit mobile number" maxLength={10} disabled={busy}
+                placeholder="10-digit mobile number" maxLength={10} disabled={submitting}
                 className={`field-input ${errors.mobile ? 'field-input-error' : ''}`} />
             </F>
             <F label="Caste" error={errors.caste}>
               <select name="caste" value={form.caste} onChange={handleChange}
-                disabled={busy} className="field-input">
+                disabled={submitting} className="field-input">
                 <option value="">-- Select --</option>
                 <option value="SC">SC</option>
                 <option value="ST">ST</option>
@@ -225,104 +165,78 @@ export default function FormPage() {
           <div className="px-3 md:px-6 py-3 md:py-5 grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-5">
             <F label="Designation" required error={errors.designation}>
               <input type="text" name="designation" value={form.designation} onChange={handleChange}
-                placeholder="e.g., Deputy Commissioner" disabled={busy}
+                placeholder="e.g., Deputy Commissioner" disabled={submitting}
                 className={`field-input ${errors.designation ? 'field-input-error' : ''}`} />
             </F>
             <F label="Division" required error={errors.division}>
               <input type="text" name="division" value={form.division} onChange={handleChange}
-                placeholder="Division name" disabled={busy}
+                placeholder="Division name" disabled={submitting}
                 className={`field-input ${errors.division ? 'field-input-error' : ''}`} />
             </F>
             <F label="Circle" required error={errors.circle}>
               <input type="text" name="circle" value={form.circle} onChange={handleChange}
-                placeholder="Circle name" disabled={busy}
+                placeholder="Circle name" disabled={submitting}
                 className={`field-input ${errors.circle ? 'field-input-error' : ''}`} />
             </F>
           </div>
 
           {/* Payment */}
-          <SectionHeader icon="💳" title={`Payment — ₹${amount}`} />
+          <SectionHeader icon="💳" title={`Payment — ₹${AMOUNT}`} />
           <div className="px-3 md:px-6 py-3 md:py-5 space-y-4">
 
-            {/* Payment info box */}
-            <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-4">
-              <p className="text-sm font-semibold text-blue-800 mb-1">
-                Membership Fee: <span className="text-blue-600 text-base">₹{amount}</span>
-              </p>
-              <p className="text-xs text-gray-500">
-                Click the button below to pay securely via UPI, Net Banking, Credit/Debit Card, or Wallet.
-                You will be redirected to the Cashfree secure payment page.
-              </p>
-            </div>
-
-            {/* ── Manual bank transfer (commented out — replaced by Cashfree) ──
+            {/* Bank details */}
             <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-4">
               <p className="text-xs font-semibold text-blue-800 uppercase tracking-wide mb-3">
-                Pay ₹{amount} to the following account
+                Pay ₹{AMOUNT} to the following account
               </p>
               <div className="flex flex-col gap-2">
-                <CopyRow label="Account Name"   value="Telangana Commercial Taxes SC/ST Employees Association" />
-                <CopyRow label="Bank"           value="Axis Bank — CCT Complex, Nampally" />
-                <CopyRow label="Account Number" value="925010044679607" mono />
-                <CopyRow label="IFSC Code"      value="UTIB0006036" mono />
+                <CopyRow label="Account Name"   value={BANK.name} />
+                <CopyRow label="Bank"           value={BANK.bank} />
+                <CopyRow label="Account Number" value={BANK.account} mono />
+                <CopyRow label="IFSC Code"      value={BANK.ifsc} mono />
               </div>
             </div>
-            Screenshot upload section also removed — payment is now verified automatically.
-            ── End manual payment ── */}
 
-            {/* Pay error */}
-            {payError && (
+            {/* Screenshot upload */}
+            <F label="Payment Screenshot" required error={errors.screenshot}>
+              <label className={`flex flex-col items-center justify-center w-full border-2 border-dashed rounded-xl p-4 cursor-pointer transition-colors
+                ${errors.screenshot ? 'border-red-400 bg-red-50' : screenshot ? 'border-green-400 bg-green-50' : 'border-gray-300 bg-gray-50 hover:border-blue-400 hover:bg-blue-50'}`}>
+                <input type="file" accept="image/*" onChange={handleFile} className="hidden" disabled={submitting} />
+                {screenshot ? (
+                  <div className="text-center">
+                    <svg className="w-8 h-8 text-green-500 mx-auto mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <p className="text-sm font-medium text-green-700">{screenshot.name}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">Tap to change</p>
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    <svg className="w-8 h-8 text-gray-400 mx-auto mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <p className="text-sm text-gray-600 font-medium">Upload payment screenshot</p>
+                    <p className="text-xs text-gray-400 mt-0.5">JPG, PNG — max 5 MB</p>
+                  </div>
+                )}
+              </label>
+            </F>
+
+            {/* Submit error */}
+            {submitError && (
               <div className="flex items-start gap-2 px-3 py-2.5 bg-red-50 border border-red-200 rounded-lg">
                 <svg className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <p className="text-xs text-red-700">{payError}</p>
+                <p className="text-xs text-red-700">{submitError}</p>
               </div>
             )}
 
-            {/* Step 1 — Pay button */}
-            <button
-              type="submit"
-              disabled={busy || paymentDone}
+            {/* Submit button */}
+            <button type="submit" disabled={submitting}
               className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-white text-sm shadow-md transition-all
-                ${paymentDone
-                  ? 'bg-green-500 cursor-default'
-                  : paying
-                    ? 'bg-blue-400 cursor-not-allowed'
-                    : 'bg-blue-600 hover:bg-blue-700 active:scale-[0.98]'}`}
-            >
-              {paying ? (
-                <><Spin /> {stepLabel}</>
-              ) : paymentDone ? (
-                <>
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  Payment of ₹{amount} Received
-                </>
-              ) : (
-                <>
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                      d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                  </svg>
-                  Pay ₹{amount}
-                </>
-              )}
-            </button>
-
-            {/* Step 2 — Submit button (enabled only after payment) */}
-            <button
-              type="button"
-              onClick={handleSubmit}
-              disabled={!paymentDone || submitting}
-              className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-white text-sm shadow-md transition-all
-                ${!paymentDone
-                  ? 'bg-gray-300 cursor-not-allowed text-gray-500'
-                  : submitting
-                    ? 'bg-indigo-400 cursor-not-allowed'
-                    : 'bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98]'}`}
-            >
+                ${submitting ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 active:scale-[0.98]'}`}>
               {submitting ? (
                 <><Spin /> Submitting…</>
               ) : (
@@ -331,15 +245,10 @@ export default function FormPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                       d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  {paymentDone ? 'Submit Registration' : 'Submit (Pay First)'}
+                  Submit Registration
                 </>
               )}
             </button>
-
-            <p className="text-xs text-center text-gray-400">
-              Secured by <span className="font-semibold text-gray-500">Cashfree Payments</span>
-              &nbsp;· Your payment is 100% secure
-            </p>
           </div>
 
           <div className="px-3 md:px-6 py-3 bg-gray-50 border-t border-gray-100">
@@ -367,7 +276,7 @@ export default function FormPage() {
   );
 }
 
-/* ── Helpers ─────────────────────────────────────────────────────────────── */
+/* ── Helpers ── */
 function SectionHeader({ icon, title }) {
   return (
     <div className="flex items-center gap-2 px-3 md:px-6 py-2 md:py-3 bg-blue-50 border-t border-b border-blue-100">
@@ -385,6 +294,28 @@ function F({ label, required, error, children }) {
       </label>
       {children}
       {error && <p className="field-error">{error}</p>}
+    </div>
+  );
+}
+
+function CopyRow({ label, value, mono }) {
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    navigator.clipboard.writeText(value).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  };
+  return (
+    <div className="flex items-center justify-between gap-2 bg-white rounded-lg px-3 py-2 border border-gray-100">
+      <div className="min-w-0">
+        <p className="text-xs text-gray-500">{label}</p>
+        <p className={`text-sm font-medium text-gray-800 truncate ${mono ? 'font-mono' : ''}`}>{value}</p>
+      </div>
+      <button type="button" onClick={copy}
+        className="flex-shrink-0 text-xs px-2 py-1 rounded bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors">
+        {copied ? '✓' : 'Copy'}
+      </button>
     </div>
   );
 }

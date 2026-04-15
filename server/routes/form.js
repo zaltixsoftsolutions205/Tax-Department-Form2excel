@@ -1,38 +1,23 @@
 const express  = require('express');
 const router   = express.Router();
-const https    = require('https');
+const multer   = require('multer');
+const path     = require('path');
 const { body, validationResult } = require('express-validator');
-
 const Submission = require('../models/Submission');
 
-/* ── Verify Cashfree order status ───────────────────────────────────────── */
-function verifyCashfreeOrder(orderId) {
-  return new Promise((resolve) => {
-    const options = {
-      hostname: 'api.cashfree.com',
-      path:     `/pg/orders/${orderId}`,
-      method:   'GET',
-      headers: {
-        'x-client-id':     process.env.CASHFREE_APP_ID,
-        'x-client-secret': process.env.CASHFREE_SECRET_KEY,
-        'x-api-version':   '2023-08-01',
-        'Content-Type':    'application/json',
-      },
-    };
-    const req = https.request(options, (res) => {
-      let data = '';
-      res.on('data', chunk => { data += chunk; });
-      res.on('end', () => {
-        try {
-          const parsed = JSON.parse(data);
-          resolve(parsed.order_status || 'UNKNOWN');
-        } catch { resolve('UNKNOWN'); }
-      });
-    });
-    req.on('error', () => resolve('UNKNOWN'));
-    req.end();
-  });
-}
+/* ── Multer — save screenshots to uploads/ ──────────────────────────────── */
+const storage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, path.join(__dirname, '..', 'uploads')),
+  filename:    (_req, file, cb) => cb(null, `${Date.now()}-${file.originalname.replace(/\s+/g, '_')}`),
+});
+const upload = multer({
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) cb(null, true);
+    else cb(new Error('Only image files are allowed'));
+  },
+});
 
 /* ── Validation ─────────────────────────────────────────────────────────── */
 const formValidation = [
@@ -44,7 +29,6 @@ const formValidation = [
   body('designation').trim().notEmpty().withMessage('Designation is required').isLength({ max: 100 }).escape(),
   body('division').trim().notEmpty().withMessage('Division is required').isLength({ max: 100 }).escape(),
   body('circle').trim().notEmpty().withMessage('Circle is required').isLength({ max: 100 }).escape(),
-  body('cashfreeOrderId').trim().notEmpty().withMessage('Payment order ID is required'),
 ];
 
 /* ── GET /api/membership-amount ────────────────────────────────────────── */
@@ -59,7 +43,7 @@ router.get('/membership-amount', async (_req, res) => {
 });
 
 /* ── POST /api/submit-form ──────────────────────────────────────────────── */
-router.post('/submit-form', formValidation, async (req, res) => {
+router.post('/submit-form', upload.single('paymentScreenshot'), formValidation, async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({
@@ -69,39 +53,35 @@ router.post('/submit-form', formValidation, async (req, res) => {
     });
   }
 
-  const { name, parentsName, mobile, caste, designation, division, circle, cashfreeOrderId } = req.body;
+  if (!req.file) {
+    return res.status(400).json({ success: false, message: 'Payment screenshot is required.' });
+  }
+
+  const { name, parentsName, mobile, caste, designation, division, circle } = req.body;
 
   try {
-    /* Verify payment status with Cashfree */
-    const cfStatus     = await verifyCashfreeOrder(cashfreeOrderId);
-    const paymentStatus = cfStatus === 'PAID' ? 'Paid' : 'Pending';
-
     const submission = new Submission({
       name,
-      parentsName:    parentsName || '',
+      parentsName:       parentsName || '',
       mobile,
-      caste:          caste || '',
+      caste:             caste || '',
       designation,
       division,
       circle,
-      cashfreeOrderId,
-      paymentStatus,
+      paymentScreenshot: req.file.filename,
+      paymentStatus:     'Pending',
     });
 
     await submission.save();
 
     return res.status(201).json({
       success: true,
-      message: 'Form submitted successfully!',
-      paymentStatus,
+      message: 'Form submitted! Admin will verify your payment shortly.',
     });
 
   } catch (error) {
     console.error('Submit form error:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'An unexpected error occurred. Please try again.',
-    });
+    return res.status(500).json({ success: false, message: 'An unexpected error occurred. Please try again.' });
   }
 });
 
