@@ -71,7 +71,6 @@ function extractPaymentAmount(text) {
   // ── Step 1: Blocklist lines we must ignore ──────────────────────────────
   // These lines contain numbers that are NOT amounts
   const isNoiseLine = (line) => {
-    const upper = line.toUpperCase();
     return (
       /TRANSACTION\s*ID/i.test(line) ||
       /UTR/i.test(line) ||
@@ -79,7 +78,7 @@ function extractPaymentAmount(text) {
       /REFERENCE/i.test(line) ||
       /MOBILE|PHONE|@|\.COM/i.test(line) ||
       /XXXX|XXXXXXX/i.test(line) ||          // masked account numbers
-      /\d{10,}/.test(line) ||                 // 10+ digit strings = IDs/phone numbers
+      /\d{13,}/.test(line) ||                 // 13+ digit strings = UPI txn IDs
       /\d{4}\s*\d{4}\s*\d{4}/.test(line)    // card numbers
     );
   };
@@ -90,9 +89,13 @@ function extractPaymentAmount(text) {
 
   // ── Step 2: Priority patterns (most reliable) ───────────────────────────
 
-  // ₹500 or ₹ 500 (explicit rupee symbol)
-  for (const line of cleanLines) {
-    const m = line.match(/₹\s*([0-9,]+(?:\.[0-9]{1,2})?)/);
+  // ₹500 or ₹ 500 (explicit rupee symbol — also catches OCR misreads like %500, z500, F500)
+  for (const line of lines) {  // use all lines, not just cleanLines
+    // Real ₹ symbol
+    let m = line.match(/₹\s*([0-9,]+(?:\.[0-9]{1,2})?)/);
+    if (m) { candidates.push({ val: parseNum(m[1]), priority: 10 }); continue; }
+    // OCR misreads ₹ as %, z, F, &, 3, §, £, ¥, etc. followed immediately by digits
+    m = line.match(/(?:^|[\s(])(?:[%§£¥&z]{1,2})\s*([0-9,]+\.[0-9]{2})\b/);
     if (m) candidates.push({ val: parseNum(m[1]), priority: 10 });
   }
 
@@ -110,8 +113,18 @@ function extractPaymentAmount(text) {
 
   // "Amount: 500" / "Total: 500" / "Paid: 500"
   for (const line of cleanLines) {
-    const m = line.match(/(?:Amount|Total|Fee|Membership|Paid|Payment)\s*[:\-]?\s*(?:₹|Rs\.?|INR)?\s*([0-9,]+(?:\.[0-9]{1,2})?)/i);
+    const m = line.match(/(?:Amount|Total|Fee|Membership|Paid|Payment|Debit|Credit)\s*[:\-]?\s*(?:₹|Rs\.?|INR)?\s*([0-9,]+(?:\.[0-9]{1,2})?)/i);
     if (m) candidates.push({ val: parseNum(m[1]), priority: 9 });
+  }
+
+  // YONO SBI / SBI YONO: amount appears as standalone "500.00" line near top
+  // Search all lines (not just cleanLines) for X,XXX.XX or XXX.XX patterns
+  for (const line of lines) {
+    const m = line.match(/^([0-9]{1,3}(?:,[0-9]{3})*\.[0-9]{2})$/);
+    if (m) {
+      const val = parseNum(m[1]);
+      if (val >= 10) candidates.push({ val, priority: 8 });
+    }
   }
 
   // ── Step 3: UPI app specific patterns ───────────────────────────────────
