@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 
-const API_BASE = import.meta.env.VITE_API_URL || '';
+const API_BASE = import.meta.env.VITE_API_URL || 'https://tcts-backend.onrender.com';
 const imgUrl   = (p) => `${API_BASE}/${p}`;
 
 const STATUSES = ['All', 'Paid', 'Paid (Verification Required)', 'Pending', 'Unpaid', 'Invalid Screenshot'];
