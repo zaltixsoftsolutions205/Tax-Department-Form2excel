@@ -233,10 +233,12 @@ export default function FormPage() {
               </div>
             )}
 
-            {/* Submit button */}
-            <button type="submit" disabled={submitting}
+            {/* Submit button — enabled only after screenshot is uploaded */}
+            <button type="submit" disabled={submitting || !screenshot}
               className={`w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-white text-sm shadow-md transition-all
-                ${submitting ? 'bg-blue-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 active:scale-[0.98]'}`}>
+                ${submitting || !screenshot
+                  ? 'bg-gray-300 cursor-not-allowed text-gray-500'
+                  : 'bg-blue-600 hover:bg-blue-700 active:scale-[0.98]'}`}>
               {submitting ? (
                 <><Spin /> Submitting…</>
               ) : (

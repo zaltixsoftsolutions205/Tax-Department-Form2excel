@@ -68,7 +68,7 @@ router.post('/submit-form', upload.single('paymentScreenshot'), formValidation, 
       designation,
       division,
       circle,
-      paymentScreenshot: req.file.filename,
+      paymentScreenshot: `uploads/${req.file.filename}`,
       paymentStatus:     'Pending',
     });
 
