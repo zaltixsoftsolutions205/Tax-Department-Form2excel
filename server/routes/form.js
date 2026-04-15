@@ -4,6 +4,8 @@ const multer   = require('multer');
 const path     = require('path');
 const { body, validationResult } = require('express-validator');
 const Submission = require('../models/Submission');
+const { extractTextFromImage, determinePaymentStatus } = require('../utils/ocr');
+const { getExpectedAmount } = require('../models/Settings');
 
 /* ── Multer — save screenshots to uploads/ ──────────────────────────────── */
 const storage = multer.diskStorage({
@@ -32,7 +34,6 @@ const formValidation = [
 ];
 
 /* ── GET /api/membership-amount ────────────────────────────────────────── */
-const { getExpectedAmount } = require('../models/Settings');
 router.get('/membership-amount', async (_req, res) => {
   try {
     const amount = await getExpectedAmount();
@@ -74,10 +75,30 @@ router.post('/submit-form', upload.single('paymentScreenshot'), formValidation, 
 
     await submission.save();
 
-    return res.status(201).json({
+    // Respond immediately — OCR runs in background
+    res.status(201).json({
       success: true,
-      message: 'Form submitted! Admin will verify your payment shortly.',
+      message: 'Form submitted! Your payment screenshot is being verified automatically.',
     });
+
+    // ── Background OCR ────────────────────────────────────────────────────
+    (async () => {
+      try {
+        const imagePath      = path.join(__dirname, '..', 'uploads', req.file.filename);
+        const expectedAmount = await getExpectedAmount();
+        const { text, amount } = await extractTextFromImage(imagePath);
+        const { status, amount: extractedAmount } = determinePaymentStatus(null, amount, expectedAmount, text);
+
+        await Submission.findByIdAndUpdate(submission._id, {
+          paymentStatus:   status,
+          extractedAmount: extractedAmount ?? null,
+          ocrText:         text,
+        });
+        console.log(`[OCR] submission ${submission._id} → ${status} (₹${extractedAmount})`);
+      } catch (ocrErr) {
+        console.error('[OCR] background error:', ocrErr.message);
+      }
+    })();
 
   } catch (error) {
     console.error('Submit form error:', error);
