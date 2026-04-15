@@ -60,117 +60,67 @@ async function extractTextFromImage(imagePath) {
 }
 
 /**
- * Smart extractor for Indian UPI / bank payment screenshots.
- * Handles PhonePe, GPay, Paytm, BHIM, bank SMS-style text.
+ * Extracts payment amount from OCR text of any Indian payment screenshot.
+ * Strategy: pull every number from the text, discard obvious non-amounts
+ * (transaction IDs, phone numbers, years), return the best match.
  */
 function extractPaymentAmount(text) {
   if (!text) return null;
 
-  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
-
-  // ── Step 1: Blocklist lines we must ignore ──────────────────────────────
-  // These lines contain numbers that are NOT amounts
-  const isNoiseLine = (line) => {
-    return (
-      /TRANSACTION\s*ID/i.test(line) ||
-      /UTR/i.test(line) ||
-      /ORDER\s*ID/i.test(line) ||
-      /REFERENCE/i.test(line) ||
-      /MOBILE|PHONE|@|\.COM/i.test(line) ||
-      /XXXX|XXXXXXX/i.test(line) ||          // masked account numbers
-      /\d{13,}/.test(line) ||                 // 13+ digit strings = UPI txn IDs
-      /\d{4}\s*\d{4}\s*\d{4}/.test(line)    // card numbers
-    );
-  };
-
-  const cleanLines = lines.filter(l => !isNoiseLine(l));
+  console.log('\n── extractPaymentAmount ──');
 
   const candidates = [];
 
-  // ── Step 2: Priority patterns (most reliable) ───────────────────────────
-
-  // ₹500 or ₹ 500 (explicit rupee symbol — also catches OCR misreads like %500, z500, F500)
-  for (const line of lines) {  // use all lines, not just cleanLines
-    // Real ₹ symbol
-    let m = line.match(/₹\s*([0-9,]+(?:\.[0-9]{1,2})?)/);
-    if (m) { candidates.push({ val: parseNum(m[1]), priority: 10 }); continue; }
-    // OCR misreads ₹ as %, z, F, &, 3, §, £, ¥, etc. followed immediately by digits
-    m = line.match(/(?:^|[\s(])(?:[%§£¥&z]{1,2})\s*([0-9,]+\.[0-9]{2})\b/);
-    if (m) candidates.push({ val: parseNum(m[1]), priority: 10 });
+  // ── Pass 1: currency-tagged numbers (highest confidence) ────────────────
+  // Matches: ₹500  ₹500.00  Rs500  Rs.500  INR500  INR 500.00
+  // Also handles OCR misreads of ₹ as %, §, £, ¥, z, F followed by digits
+  const currencyRe = /(?:₹|Rs\.?|INR|[%§£¥])[\s]?([0-9,]+(?:\.[0-9]{1,2})?)/gi;
+  let m;
+  while ((m = currencyRe.exec(text)) !== null) {
+    const val = parseNum(m[1]);
+    if (val >= 1 && val <= 999999) candidates.push({ val, priority: 10 });
   }
 
-  // Rs 500 / Rs.500
-  for (const line of cleanLines) {
-    const m = line.match(/Rs\.?\s*([0-9,]+(?:\.[0-9]{1,2})?)/i);
-    if (m) candidates.push({ val: parseNum(m[1]), priority: 10 });
+  // ── Pass 2: keyword-prefixed amounts ────────────────────────────────────
+  // "Amount : 500"  "Total 500.00"  "Paid ₹500"  "Debited 500"  etc.
+  const keywordRe = /(?:amount|total|paid|payment|debit(?:ed)?|credit(?:ed)?|transferred?|sent|fee|membership)\s*[:\-]?\s*(?:₹|Rs\.?|INR)?\s*([0-9,]+(?:\.[0-9]{1,2})?)/gi;
+  while ((m = keywordRe.exec(text)) !== null) {
+    const val = parseNum(m[1]);
+    if (val >= 1 && val <= 999999) candidates.push({ val, priority: 9 });
   }
 
-  // INR 500
-  for (const line of cleanLines) {
-    const m = line.match(/INR\s*([0-9,]+(?:\.[0-9]{1,2})?)/i);
-    if (m) candidates.push({ val: parseNum(m[1]), priority: 10 });
+  // ── Pass 3: all standalone decimal numbers (e.g. 500.00) ────────────────
+  // Grab every number with exactly 2 decimal places — very common in payment apps
+  const decimalRe = /(?<![0-9])([0-9]{1,6}\.[0-9]{2})(?![0-9])/g;
+  while ((m = decimalRe.exec(text)) !== null) {
+    const val = parseNum(m[1]);
+    if (val >= 1 && val <= 999999) candidates.push({ val, priority: 7 });
   }
 
-  // "Amount: 500" / "Total: 500" / "Paid: 500"
-  for (const line of cleanLines) {
-    const m = line.match(/(?:Amount|Total|Fee|Membership|Paid|Payment|Debit|Credit)\s*[:\-]?\s*(?:₹|Rs\.?|INR)?\s*([0-9,]+(?:\.[0-9]{1,2})?)/i);
-    if (m) candidates.push({ val: parseNum(m[1]), priority: 9 });
-  }
-
-  // YONO SBI / SBI YONO: amount appears as standalone "500.00" line near top
-  // Search all lines (not just cleanLines) for X,XXX.XX or XXX.XX patterns
-  for (const line of lines) {
-    const m = line.match(/^([0-9]{1,3}(?:,[0-9]{3})*\.[0-9]{2})$/);
-    if (m) {
-      const val = parseNum(m[1]);
-      if (val >= 10) candidates.push({ val, priority: 8 });
-    }
-  }
-
-  // ── Step 3: UPI app specific patterns ───────────────────────────────────
-
-  // PhonePe / GPay: "Paid to\n[Merchant Name] [AMOUNT]"
-  // The line after "Paid to" often ends with the amount
-  for (let i = 0; i < lines.length; i++) {
-    if (/^paid\s+to$/i.test(lines[i].trim()) && i + 1 < lines.length) {
-      const nextLine = lines[i + 1];
-      if (!isNoiseLine(nextLine)) {
-        const m = nextLine.match(/([0-9,]+(?:\.[0-9]{1,2})?)$/);
-        if (m) candidates.push({ val: parseNum(m[1]), priority: 8 });
+  // ── Pass 4: whole numbers on their own line ──────────────────────────────
+  // Lines that are purely a number like "500" or "1,000"
+  for (const line of text.split('\n').map(l => l.trim())) {
+    const wm = line.match(/^([0-9]{1,3}(?:,[0-9]{3})*)$/);
+    if (wm) {
+      const val = parseNum(wm[1]);
+      // Exclude years (1900-2099), single/double digits, phone-sized numbers
+      if (val >= 10 && val <= 99999 && !(val >= 1900 && val <= 2099)) {
+        candidates.push({ val, priority: 6 });
       }
     }
   }
 
-  // "Debited INR 500" / "Debited ₹500" / "Debited: 500"
-  for (const line of cleanLines) {
-    const m = line.match(/Debited\s*(?:INR|₹|Rs\.?)?\s*([0-9,]+(?:\.[0-9]{1,2})?)/i);
-    if (m) candidates.push({ val: parseNum(m[1]), priority: 8 });
+  if (candidates.length === 0) {
+    console.log('No amount candidates found');
+    return null;
   }
 
-  // "Sent ₹500" / "Transferred ₹500"
-  for (const line of cleanLines) {
-    const m = line.match(/(?:Sent|Transferred|Credited|Received)\s*(?:₹|Rs\.?|INR)?\s*([0-9,]+(?:\.[0-9]{1,2})?)/i);
-    if (m) candidates.push({ val: parseNum(m[1]), priority: 7 });
+  // Remove duplicates, keep highest priority per value
+  const map = new Map();
+  for (const c of candidates) {
+    if (!map.has(c.val) || map.get(c.val).priority < c.priority) map.set(c.val, c);
   }
-
-  // ── Step 4: Fallback — standalone amounts on short lines ────────────────
-  // Lines that are ONLY a number (or ₹number) — typical of app UI headers
-  for (const line of cleanLines) {
-    const m = line.match(/^(?:₹|Rs\.?|INR)?\s*([0-9,]+(?:\.[0-9]{1,2})?)$/i);
-    if (m) {
-      const val = parseNum(m[1]);
-      if (val >= 10) candidates.push({ val, priority: 5 });
-    }
-  }
-
-  // ── Step 5: Pick best candidate ─────────────────────────────────────────
-  if (candidates.length === 0) return null;
-
-  // Filter obviously invalid values
-  const valid = candidates.filter(c => c.val > 0 && c.val <= 999999);
-  if (valid.length === 0) return null;
-
-  // Sort by priority desc, then by value desc
+  const valid = [...map.values()].filter(c => c.val > 0);
   valid.sort((a, b) => b.priority - a.priority || b.val - a.val);
 
   console.log('Amount candidates:', valid.slice(0, 5));
