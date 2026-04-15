@@ -336,6 +336,27 @@ export default function AdminPage() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
+  // Auto-poll every 5 s while any submission is still Pending (OCR in progress)
+  useEffect(() => {
+    const hasPending = submissions.some(s => s.paymentStatus === 'Pending');
+    if (!hasPending) return;
+    const id = setInterval(async () => {
+      try {
+        const params = {};
+        if (filterStatus !== 'All') params.status    = filterStatus;
+        if (filterStartDate)        params.startDate = filterStartDate;
+        if (filterEndDate)          params.endDate   = filterEndDate;
+        const [s, st] = await Promise.all([
+          api.get('/api/admin/responses', { params }),
+          api.get('/api/admin/stats'),
+        ]);
+        setSubmissions(s.data.data || []);
+        setStats(st.data.data);
+      } catch { /* silent */ }
+    }, 5000);
+    return () => clearInterval(id);
+  }, [submissions, filterStatus, filterStartDate, filterEndDate]);
+
   const downloadExcel = async () => {
     try {
       const p = new URLSearchParams();
