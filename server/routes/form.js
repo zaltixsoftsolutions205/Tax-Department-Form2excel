@@ -6,6 +6,8 @@ const { body, validationResult } = require('express-validator');
 const Submission = require('../models/Submission');
 const { extractTextFromImage, determinePaymentStatus } = require('../utils/ocr');
 const { getExpectedAmount } = require('../models/Settings');
+const { uploadToCloudinary } = require('../utils/cloudinary');
+const fs = require('fs');
 
 /* ── Multer — save screenshots to uploads/ ──────────────────────────────── */
 const storage = multer.diskStorage({
@@ -75,28 +77,42 @@ router.post('/submit-form', upload.single('paymentScreenshot'), formValidation, 
 
     await submission.save();
 
-    // Respond immediately — OCR runs in background
+    // Respond immediately — Cloudinary upload + OCR runs in background
     res.status(201).json({
       success: true,
       message: 'Form submitted! Your payment screenshot is being verified automatically.',
     });
 
-    // ── Background OCR ────────────────────────────────────────────────────
+    // ── Background: Cloudinary upload + OCR ──────────────────────────────
     (async () => {
+      const localPath = path.join(__dirname, '..', 'uploads', req.file.filename);
       try {
-        const imagePath      = path.join(__dirname, '..', 'uploads', req.file.filename);
+        // 1. Run OCR on local file
         const expectedAmount = await getExpectedAmount();
-        const { text, amount } = await extractTextFromImage(imagePath);
+        const { text, amount } = await extractTextFromImage(localPath);
         const { status, amount: extractedAmount } = determinePaymentStatus(null, amount, expectedAmount, text);
 
+        // 2. Upload to Cloudinary for permanent storage
+        let screenshotUrl = `uploads/${req.file.filename}`;
+        try {
+          screenshotUrl = await uploadToCloudinary(localPath);
+        } catch (cdnErr) {
+          console.error('[Cloudinary] upload error:', cdnErr.message);
+        }
+
+        // 3. Update submission with Cloudinary URL + OCR result
         await Submission.findByIdAndUpdate(submission._id, {
-          paymentStatus:   status,
-          extractedAmount: extractedAmount ?? null,
-          ocrText:         text ? text.substring(0, 500) : null,
+          paymentScreenshot: screenshotUrl,
+          paymentStatus:     status,
+          extractedAmount:   extractedAmount ?? null,
+          ocrText:           text ? text.substring(0, 500) : null,
         });
         console.log(`[OCR] submission ${submission._id} → ${status} (₹${extractedAmount})`);
-      } catch (ocrErr) {
-        console.error('[OCR] background error:', ocrErr.message);
+
+        // 4. Delete local file
+        fs.unlink(localPath, () => {});
+      } catch (err) {
+        console.error('[Background] error:', err.message);
       }
     })();
 
