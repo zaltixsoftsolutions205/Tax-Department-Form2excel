@@ -92,7 +92,7 @@ router.post('/submit-form', upload.single('paymentScreenshot'), formValidation, 
         await Submission.findByIdAndUpdate(submission._id, {
           paymentStatus:   status,
           extractedAmount: extractedAmount ?? null,
-          ocrText:         text,
+          ocrText:         text ? text.substring(0, 500) : null,
         });
         console.log(`[OCR] submission ${submission._id} → ${status} (₹${extractedAmount})`);
       } catch (ocrErr) {

@@ -207,7 +207,7 @@ router.post(
         extractedAmount = result.amount;
       }
 
-      await sub.updateOne({ $set: { paymentStatus, extractedAmount, ocrText: text || '', manualOverride: false } });
+      await sub.updateOne({ $set: { paymentStatus, extractedAmount, ocrText: text ? text.substring(0, 500) : '', manualOverride: false } });
 
       res.json({ success: true, data: { paymentStatus, extractedAmount } });
     } catch (err) {
